@@ -97,7 +97,7 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#06090F] text-slate-100 selection:bg-red-500 selection:text-white">
+    <main className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-100 selection:bg-red-500 selection:text-white">
       {/* Background grid — operational chart feel */}
       <div
         aria-hidden
@@ -124,13 +124,13 @@ export default function LoginPage() {
       />
 
       {/* Top status bar */}
-      <header className="relative z-20 border-b border-slate-800/80 bg-[#06090F]/80 backdrop-blur-xl">
+      <header className="relative z-20 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-xl">
         <div className="container flex h-14 items-center justify-between text-xs">
           <Link href="/" className="flex items-center gap-2.5 group">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-red-500 to-rose-600 shadow-[0_0_18px_-2px_rgba(239,68,68,0.6)] transition-transform group-hover:scale-105">
               <Activity className="h-4 w-4 text-white" />
             </div>
-            <span className="font-display text-base font-bold tracking-tight text-white">
+            <span className="font-display text-base font-bold tracking-tight text-slate-100">
               Nexora<span className="text-red-500">.</span>
             </span>
           </Link>
@@ -152,7 +152,7 @@ export default function LoginPage() {
 
           <Link
             href="/"
-            className="font-mono uppercase tracking-wider text-[11px] text-slate-400 transition hover:text-white"
+            className="font-mono uppercase tracking-wider text-[11px] text-slate-400 transition hover:text-slate-100"
           >
             ← Back to home
           </Link>
@@ -169,10 +169,10 @@ export default function LoginPage() {
               Bangladesh Disaster Response Coordination
             </div>
 
-            <h1 className="mt-6 font-display text-5xl sm:text-6xl lg:text-7xl font-bold leading-[0.95] tracking-tight text-white">
+            <h1 className="mt-6 font-display text-5xl sm:text-6xl lg:text-7xl font-bold leading-[0.95] tracking-tight text-slate-100">
               Command
               <br />
-              <span className="bg-gradient-to-r from-red-500 via-rose-400 to-amber-400 bg-clip-text text-transparent">
+              <span className="text-red-500">
                 bridge
               </span>
               <span className="text-red-500">.</span>
@@ -233,7 +233,7 @@ export default function LoginPage() {
               </span>
             </div>
 
-            <h2 className="font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
+            <h2 className="font-display text-3xl font-bold tracking-tight text-slate-100 sm:text-4xl">
               Sign in to your
               <br />
               operations console.
@@ -308,7 +308,7 @@ export default function LoginPage() {
                   className="group flex items-center justify-between rounded-md border border-slate-800 bg-slate-900/40 px-4 py-3 text-sm text-slate-200 transition hover:border-emerald-500/40 hover:bg-slate-900/80"
                 >
                   <span>
-                    <span className="block font-semibold text-white">Volunteer</span>
+                    <span className="block font-semibold text-slate-100">Volunteer</span>
                     <span className="block text-[11px] font-mono uppercase tracking-wider text-slate-500">
                       Register
                     </span>
@@ -320,7 +320,7 @@ export default function LoginPage() {
                   className="group flex items-center justify-between rounded-md border border-slate-800 bg-slate-900/40 px-4 py-3 text-sm text-slate-200 transition hover:border-red-500/40 hover:bg-slate-900/80"
                 >
                   <span>
-                    <span className="block font-semibold text-white">NGO</span>
+                    <span className="block font-semibold text-slate-100">NGO</span>
                     <span className="block text-[11px] font-mono uppercase tracking-wider text-slate-500">
                       Register
                     </span>
@@ -479,7 +479,7 @@ function Metric({
         )}
         {label}
       </div>
-      <div className="font-display text-2xl font-bold tracking-tight text-white sm:text-3xl">
+      <div className="font-display text-2xl font-bold tracking-tight text-slate-100 sm:text-3xl">
         {value}
       </div>
       {hint && (

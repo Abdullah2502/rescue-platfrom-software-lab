@@ -90,6 +90,22 @@ html, body {
   overflow-x: hidden;
 }
 
+body,
+header,
+aside,
+main {
+  transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body,
+  header,
+  aside,
+  main {
+    transition: none;
+  }
+}
+
 * {
   border-color: var(--border);
 }
@@ -156,6 +172,22 @@ h1, h2, h3 {
   box-shadow: 0 10px 30px -16px rgba(15, 23, 42, 0.2);
 }
 
+:root[data-theme="light"] .text-red-300,
+:root[data-theme="light"] .text-red-400,
+:root[data-theme="light"] .text-red-500 {
+  color: #B91C1C;
+}
+
+:root[data-theme="light"] .text-emerald-400,
+:root[data-theme="light"] .text-emerald-500 {
+  color: #047857;
+}
+
+:root[data-theme="light"] .text-amber-400,
+:root[data-theme="light"] .text-amber-500 {
+  color: #B45309;
+}
+
 :root[data-theme="light"] ::-webkit-scrollbar-track { background: #F1F5F9; }
 :root[data-theme="light"] ::-webkit-scrollbar-thumb { background: #CBD5E1; }
 
@@ -188,7 +220,7 @@ h1, h2, h3 {
     @apply nx-btn bg-slate-800/80 text-slate-100 border border-slate-700/80 hover:bg-slate-700/80 hover:border-slate-600 px-5 py-2.5 backdrop-blur-sm;
   }
   .nx-btn-ghost {
-    @apply nx-btn text-slate-300 hover:text-white hover:bg-slate-800/50 px-4 py-2;
+    @apply nx-btn text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 px-4 py-2;
   }
   .nx-btn-danger {
     @apply nx-btn bg-red-950/40 text-red-400 border border-red-800/50 hover:bg-red-900/60 px-4 py-2;
@@ -210,7 +242,7 @@ h1, h2, h3 {
     @apply glass-card p-6 rounded-xl flex flex-col justify-between;
   }
   .nx-stat-value {
-    @apply font-display text-3xl font-bold tracking-tight text-white;
+    @apply font-display text-3xl font-bold tracking-tight text-slate-100;
   }
   .nx-stat-label {
     @apply font-mono text-[10px] uppercase tracking-[0.14em] font-semibold text-slate-400;

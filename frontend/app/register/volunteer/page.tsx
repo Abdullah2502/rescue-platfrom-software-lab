@@ -75,7 +75,7 @@ export default function RegisterVolunteerPage() {
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#06090F] text-slate-100 selection:bg-red-500 selection:text-white">
+    <main className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-100 selection:bg-red-500 selection:text-white">
       {/* Background grid + glows */}
       <div
         aria-hidden
@@ -98,13 +98,13 @@ export default function RegisterVolunteerPage() {
       />
 
       {/* Top status bar */}
-      <header className="relative z-20 border-b border-slate-800/80 bg-[#06090F]/80 backdrop-blur-xl">
+      <header className="relative z-20 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-xl">
         <div className="container flex h-14 items-center justify-between text-xs">
           <Link href="/" className="flex items-center gap-2.5 group">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-red-500 to-rose-600 shadow-[0_0_18px_-2px_rgba(239,68,68,0.6)] transition-transform group-hover:scale-105">
               <Activity className="h-4 w-4 text-white" />
             </div>
-            <span className="font-display text-base font-bold tracking-tight text-white">
+            <span className="font-display text-base font-bold tracking-tight text-slate-100">
               Nexora<span className="text-red-500">.</span>
             </span>
           </Link>
@@ -117,7 +117,7 @@ export default function RegisterVolunteerPage() {
           </div>
           <Link
             href="/login"
-            className="font-mono uppercase tracking-wider text-[11px] text-slate-400 transition hover:text-white"
+            className="font-mono uppercase tracking-wider text-[11px] text-slate-400 transition hover:text-slate-100"
           >
             Already have an account →
           </Link>
@@ -131,8 +131,8 @@ export default function RegisterVolunteerPage() {
           Register · Volunteer
         </div>
 
-        <h1 className="mt-6 font-display text-4xl sm:text-5xl font-bold leading-[1.02] tracking-tight text-white">
-          Join the <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-300 bg-clip-text text-transparent">roster</span>.
+        <h1 className="mt-6 font-display text-4xl sm:text-5xl font-bold leading-[1.02] tracking-tight text-slate-100">
+          Join the <span className="text-emerald-500">roster</span>.
         </h1>
         <p className="mt-3 max-w-xl text-base text-slate-400 leading-relaxed">
           Pick the Division, District, and Thana where you're based — that's
@@ -152,7 +152,7 @@ export default function RegisterVolunteerPage() {
             <div className="mb-6 flex items-center justify-between border-b border-slate-800/80 pb-4">
               <div className="flex items-center gap-3">
                 <span className="font-mono text-xs font-bold text-emerald-400">01</span>
-                <span className="font-display text-lg font-bold text-white">About you</span>
+                <span className="font-display text-lg font-bold text-slate-100">About you</span>
               </div>
               <span className="font-mono text-[10px] uppercase tracking-wider text-slate-500">
                 Identity
@@ -233,7 +233,7 @@ export default function RegisterVolunteerPage() {
             <div className="mb-6 flex items-center justify-between border-b border-slate-800/80 pb-4">
               <div className="flex items-center gap-3">
                 <span className="font-mono text-xs font-bold text-emerald-400">02</span>
-                <span className="font-display text-lg font-bold text-white">Where you're based</span>
+                <span className="font-display text-lg font-bold text-slate-100">Where you're based</span>
               </div>
               <span className="font-mono text-[10px] uppercase tracking-wider text-slate-500">
                 Geography
@@ -251,7 +251,7 @@ export default function RegisterVolunteerPage() {
             <div className="mb-6 flex items-center justify-between border-b border-slate-800/80 pb-4">
               <div className="flex items-center gap-3">
                 <span className="font-mono text-xs font-bold text-emerald-400">03</span>
-                <span className="font-display text-lg font-bold text-white">What you can do</span>
+                <span className="font-display text-lg font-bold text-slate-100">What you can do</span>
               </div>
               <span className="font-mono text-[10px] uppercase tracking-wider text-slate-500">
                 Skills
@@ -314,7 +314,7 @@ function PendingConfirmationPanel({ name, email }: { name: string; email: string
           <div className="font-mono text-[10px] uppercase tracking-wider text-emerald-300">
             Application received
           </div>
-          <h2 className="font-display text-2xl font-bold text-white">
+          <h2 className="font-display text-2xl font-bold text-slate-100">
             Welcome aboard, {name.split(" ")[0]}.
           </h2>
         </div>
@@ -346,7 +346,7 @@ function PendingConfirmationPanel({ name, email }: { name: string; email: string
       <div className="mt-8 flex flex-col sm:flex-row gap-3">
         <Link
           href="/login"
-          className="inline-flex items-center justify-center gap-2 rounded-md bg-emerald-500 px-5 py-2.5 font-display text-sm font-bold text-slate-950 transition hover:bg-emerald-400"
+          className="inline-flex items-center justify-center gap-2 rounded-md bg-emerald-500 px-5 py-2.5 font-display text-sm font-bold text-white transition hover:bg-emerald-400"
         >
           Back to sign in
           <ArrowRight className="h-4 w-4" />

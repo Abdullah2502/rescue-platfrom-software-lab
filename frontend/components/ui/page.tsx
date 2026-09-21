@@ -23,7 +23,7 @@ export function PageHeader({
               {eyebrow}
             </div>
           )}
-          <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-white">{title}</h1>
+          <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-slate-100">{title}</h1>
           {description && (
             <p className="max-w-3xl text-sm text-slate-400 leading-relaxed">{description}</p>
           )}
@@ -51,7 +51,7 @@ export function SectionTitle({
           {eyebrow}
         </div>
       )}
-      <h2 className="font-display text-2xl font-bold text-white tracking-tight">{title}</h2>
+      <h2 className="font-display text-2xl font-bold text-slate-100 tracking-tight">{title}</h2>
     </div>
   );
 }
@@ -70,7 +70,7 @@ export function EmptyState({
   return (
     <div className="border border-dashed border-slate-800 rounded-2xl p-12 text-center bg-slate-900/40 backdrop-blur-sm">
       {icon && <div className="mx-auto mb-4 w-12 h-12 text-slate-500 flex items-center justify-center">{icon}</div>}
-      <div className="font-display text-xl font-bold text-white">{title}</div>
+      <div className="font-display text-xl font-bold text-slate-100">{title}</div>
       {description && <p className="mt-2 text-sm text-slate-400 max-w-md mx-auto">{description}</p>}
       {action && <div className="mt-6">{action}</div>}
     </div>
@@ -107,7 +107,7 @@ export function StatCard({
   return (
     <div className="glass-card p-6 rounded-2xl space-y-2 border border-slate-800 relative overflow-hidden group">
       <div className="font-mono text-[11px] font-bold text-slate-400 uppercase tracking-wider">{label}</div>
-      <div className="font-display text-3xl sm:text-4xl font-bold text-white tracking-tight group-hover:text-red-400 transition-colors">
+      <div className="font-display text-3xl sm:text-4xl font-bold text-slate-100 tracking-tight group-hover:text-red-400 transition-colors">
         {value}
       </div>
       {hint && <div className="text-xs text-slate-500 font-mono">{hint}</div>}

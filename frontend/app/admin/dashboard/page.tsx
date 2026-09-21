@@ -55,7 +55,7 @@ export default function AdminDashboard() {
           <button
             onClick={load}
             disabled={loading}
-            className="inline-flex items-center gap-2 rounded-md border border-slate-800 bg-slate-900/60 px-3 py-2 font-mono text-[11px] uppercase tracking-wider text-slate-300 transition hover:border-red-500/40 hover:text-white disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-md border border-slate-800 bg-slate-900/60 px-3 py-2 font-mono text-[11px] uppercase tracking-wider text-slate-300 transition hover:border-red-500/40 hover:text-slate-100 disabled:opacity-50"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin text-red-400" : ""}`} />
             {loading ? "Refreshing" : "Refresh"}
@@ -97,7 +97,7 @@ export default function AdminDashboard() {
           </div>
 
           <div className="space-y-4">
-            <h2 className="font-display text-xl font-bold text-white tracking-tight">Administrative Controls</h2>
+            <h2 className="font-display text-xl font-bold text-slate-100 tracking-tight">Administrative Controls</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <QuickAction
                 href="/admin/ngos"
@@ -138,7 +138,7 @@ function QuickAction({ href, icon, title, body }: { href: string; icon: React.Re
         {icon}
       </div>
       <div className="flex-1 space-y-1">
-        <h3 className="font-display font-bold text-lg text-white flex items-center gap-2 group-hover:text-red-400 transition-colors">
+        <h3 className="font-display font-bold text-lg text-slate-100 flex items-center gap-2 group-hover:text-red-400 transition-colors">
           {title}
           <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
         </h3>
