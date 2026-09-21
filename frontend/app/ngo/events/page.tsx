@@ -85,7 +85,7 @@ export default function NgoEventsPage() {
                       <Button variant="secondary" size="sm">Manage</Button>
                     </Link>
                     {e.status === "OPEN"    && <Button variant="ghost" size="sm" onClick={() => changeStatus(e.id, "ONGOING")}>Start</Button>}
-                    {e.status === "ONGOING" && <Button variant="ghost" size="sm" onClick={() => changeStatus(e.id, "CLOSED")}>Close</Button>}
+                    {e.status === "ONGOING" && <Button variant="ghost" size="sm" onClick={() => changeStatus(e.id, "CLOSED")}>Finish</Button>}
                   </td>
                 </tr>
               ))}
