@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { ChevronDown, LogOut, LucideIcon, Activity, Shield, User, Building } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth, logoutAndGoHome } from "@/lib/auth";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 type NavItem = {
   label: string;
@@ -67,7 +68,9 @@ export function AppShell({
           </div>
 
           {/* User Profile Dropdown */}
-          <div className="relative">
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <div className="relative">
             <button
               onClick={() => setMenuOpen((s) => !s)}
               className="flex items-center gap-3 rounded-xl border border-slate-800 bg-slate-900/90 px-3.5 h-9 text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:border-slate-700 transition"
@@ -96,6 +99,7 @@ export function AppShell({
                 </button>
               </div>
             )}
+            </div>
           </div>
         </div>
       </header>

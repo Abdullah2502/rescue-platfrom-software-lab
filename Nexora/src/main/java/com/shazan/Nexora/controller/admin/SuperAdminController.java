@@ -10,6 +10,9 @@ import com.shazan.Nexora.dto.ngo.NgoApprovalRequest;
 import com.shazan.Nexora.dto.ngo.NgoResponse;
 import com.shazan.Nexora.dto.volunteer.VolunteerApprovalRequest;
 import com.shazan.Nexora.dto.volunteer.VolunteerResponse;
+import com.shazan.Nexora.dto.certificate.CertificateGenerationResponse;
+import com.shazan.Nexora.dto.certificate.CertificateResponse;
+import com.shazan.Nexora.service.certificate.CertificateService;
 import com.shazan.Nexora.service.admin.SuperAdminService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +20,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/admin")
@@ -25,6 +29,7 @@ import java.util.Map;
 public class SuperAdminController {
 
     private final SuperAdminService service;
+    private final CertificateService certificateService;
 
     @GetMapping("/ngos")
     public ApiResponse<PageResponse<NgoResponse>> listNgos(@RequestParam(required = false) NgoStatus status,
@@ -36,6 +41,16 @@ public class SuperAdminController {
     @PostMapping("/ngos/{id}/approve")
     public ApiResponse<NgoResponse> approveOrReject(@PathVariable Long id, @Valid @RequestBody NgoApprovalRequest req) {
         return ApiResponse.ok(service.reviewNgo(id, req));
+    }
+
+    /**
+     * Hard-delete an NGO. Cascades the NGO's events and invitations, and
+     * nulls out the {@code recruitedByNgo} pointer on volunteers they added.
+     * Response includes the counts of cascaded rows for audit logs.
+     */
+    @DeleteMapping("/ngos/{id}")
+    public ApiResponse<Map<String, Object>> deleteNgo(@PathVariable Long id) {
+        return ApiResponse.ok(service.deleteNgo(id));
     }
 
     @GetMapping("/volunteers")
@@ -56,11 +71,32 @@ public class SuperAdminController {
         return ApiResponse.ok(service.reviewVolunteer(id, req));
     }
 
+    /**
+     * Hard-delete a volunteer. Refuses if the volunteer still has outstanding
+     * event invitations — those must be resolved first so we don't strand
+     * an {@code EventInvitation} row pointing at a deleted volunteer.
+     */
+    @DeleteMapping("/volunteers/{id}")
+    public ApiResponse<Void> deleteVolunteer(@PathVariable Long id) {
+        service.deleteVolunteer(id);
+        return ApiResponse.ok(null);
+    }
+
     @GetMapping("/events")
     public ApiResponse<PageResponse<DisasterEventResponse>> listEvents(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         return ApiResponse.ok(service.listAllEvents(page, size));
+    }
+
+    @PostMapping("/events/{id}/certificates/generate")
+    public ApiResponse<CertificateGenerationResponse> generateCertificates(@PathVariable Long id) {
+        return ApiResponse.ok(certificateService.generateForEvent(id));
+    }
+
+    @GetMapping("/certificates")
+    public ApiResponse<List<CertificateResponse>> listCertificates() {
+        return ApiResponse.ok(certificateService.listAll());
     }
 
     @GetMapping("/stats")

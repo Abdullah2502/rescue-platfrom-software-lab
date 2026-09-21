@@ -35,9 +35,17 @@ export default function RootLayout({
     <html
       lang="en"
       data-theme="nexora"
+      suppressHydrationWarning
       className={`${outfit.variable} ${inter.variable} ${jetbrains.variable}`}
     >
-      <body className="min-h-screen bg-slate-950 text-slate-100 antialiased selection:bg-red-500 selection:text-white">{children}</body>
+      <body className="min-h-screen bg-slate-950 text-slate-100 antialiased selection:bg-red-500 selection:text-white">
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('nexora-theme');if(!t)t=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';document.documentElement.dataset.theme=t;}catch(e){}})()`,
+          }}
+        />
+        {children}
+      </body>
     </html>
   );
 }

@@ -3,10 +3,8 @@ package com.shazan.Nexora.service.volunteer;
 import com.shazan.Nexora.common.exception.ApiException;
 import com.shazan.Nexora.domain.enums.Role;
 import com.shazan.Nexora.domain.volunteer.Volunteer;
-import com.shazan.Nexora.dto.invitation.InvitationResponse;
 import com.shazan.Nexora.dto.location.LocationDto;
 import com.shazan.Nexora.dto.volunteer.VolunteerResponse;
-import com.shazan.Nexora.repository.event.EventInvitationRepository;
 import com.shazan.Nexora.repository.location.DistrictRepository;
 import com.shazan.Nexora.repository.location.DivisionRepository;
 import com.shazan.Nexora.repository.location.ThanaRepository;
@@ -23,11 +21,11 @@ import java.util.List;
 public class VolunteerService {
 
     private final VolunteerRepository volunteerRepository;
-    private final EventInvitationRepository invitationRepository;
     private final DivisionRepository divisionRepository;
     private final DistrictRepository districtRepository;
     private final ThanaRepository thanaRepository;
 
+    @Transactional(readOnly = true)
     public VolunteerResponse me() {
         return toResponse(requireVolunteer());
     }
@@ -53,22 +51,6 @@ public class VolunteerService {
         }
         volunteerRepository.save(v);
         return toResponse(v);
-    }
-
-    public List<InvitationResponse> myInvitations() {
-        Volunteer v = requireVolunteer();
-        return invitationRepository.findAllByVolunteer(v).stream().map(inv -> new InvitationResponse(
-                inv.getId(),
-                inv.getEvent().getId(),
-                inv.getEvent().getTitle(),
-                inv.getVolunteer().getId(),
-                inv.getVolunteer().getName(),
-                inv.getNgo().getId(),
-                inv.getNgo().getName(),
-                inv.getStatus(),
-                inv.getCreatedAt(),
-                inv.getRespondedAt()
-        )).toList();
     }
 
     private Volunteer requireVolunteer() {

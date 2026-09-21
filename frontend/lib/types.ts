@@ -5,7 +5,6 @@ export type VolunteerStatus = "PENDING_VERIFICATION" | "ACTIVE" | "INACTIVE";
 export type EventType = "FLOOD" | "CYCLONE" | "EARTHQUAKE" | "FIRE" | "PANDEMIC" | "OTHER";
 export type Severity = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 export type EventStatus = "DRAFT" | "OPEN" | "ONGOING" | "CLOSED" | "CANCELLED";
-export type InvitationStatus = "INVITED" | "ACCEPTED" | "DECLINED" | "DEPLOYED";
 
 export interface Location { id: number; name: string; bnName?: string; parentId?: number | null; }
 
@@ -45,16 +44,22 @@ export interface DisasterEventResponse {
   id: number; title: string; type: EventType; severity: Severity; description?: string;
   divisions: Location[]; districts: Location[]; thanas: Location[];
   startAt: string; endAt: string; requiredVolunteers: number;
-  status: EventStatus; ngoId: number; ngoName: string;
-  acceptedCount: number; invitedCount: number; declinedCount: number; deployedCount: number;
+  status: EventStatus; organizerId?: number | null; organizerName: string;
+  organizerType: "NGO" | "VOLUNTEER" | "ADMIN" | "PLATFORM";
+  participantCount: number; joinedByCurrentVolunteer: boolean;
   createdAt?: string;
 }
 
-export interface InvitationResponse {
-  id: number; eventId: number; eventTitle: string;
-  volunteerId: number; volunteerName: string;
-  ngoId: number; ngoName: string;
-  status: InvitationStatus; invitedAt?: string; respondedAt?: string;
+export interface CertificateResponse {
+  id: number; certificateNumber: string;
+  eventId: number; eventTitle: string; eventType: EventType;
+  volunteerId: number; volunteerName: string; organizerName: string;
+  eventStartAt: string; eventEndAt: string; issuedAt: string;
+}
+
+export interface CertificateGenerationResponse {
+  eventId: number; eventTitle: string; generated: number;
+  alreadyIssued: number; participantCount: number;
 }
 
 export interface BulkUploadResponse {

@@ -1,0 +1,26 @@
+package com.shazan.Nexora.repository.event;
+
+import com.shazan.Nexora.domain.event.DisasterEvent;
+import com.shazan.Nexora.domain.event.EventParticipation;
+import com.shazan.Nexora.domain.ngo.Ngo;
+import com.shazan.Nexora.domain.volunteer.Volunteer;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface EventParticipationRepository extends JpaRepository<EventParticipation, Long> {
+    Optional<EventParticipation> findByEventAndVolunteer(DisasterEvent event, Volunteer volunteer);
+    boolean existsByEventAndVolunteer(DisasterEvent event, Volunteer volunteer);
+    long countByEvent(DisasterEvent event);
+    long countByVolunteer(Volunteer volunteer);
+    List<EventParticipation> findAllByEvent(DisasterEvent event);
+    List<EventParticipation> findAllByVolunteerOrderByCreatedAtDesc(Volunteer volunteer);
+
+    @Modifying
+    @Query("DELETE FROM EventParticipation p WHERE p.event.ngo = :ngo")
+    int deleteByEventNgo(@Param("ngo") Ngo ngo);
+}

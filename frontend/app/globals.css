@@ -8,6 +8,22 @@
  * ------------------------------------------------------------------------ */
 
 :root {
+  color-scheme: dark;
+  --nx-slate-50: 248 250 252;
+  --nx-slate-100: 241 245 249;
+  --nx-slate-200: 226 232 240;
+  --nx-slate-300: 203 213 225;
+  --nx-slate-400: 148 163 184;
+  --nx-slate-500: 100 116 139;
+  --nx-slate-600: 71 85 105;
+  --nx-slate-700: 51 65 85;
+  --nx-slate-800: 30 41 59;
+  --nx-slate-900: 15 23 42;
+  --nx-slate-950: 2 6 23;
+  --nx-ink: 248 250 252;
+  --nx-paper: 15 23 42;
+  --nx-surface: 15 23 42;
+  --nx-mist: 148 163 184;
   /* Dark-first palette — paper is dark slate, ink is near-white.
    * Tailwind tokens in tailwind.config.ts mirror these values. */
   --background: #06090F;
@@ -32,6 +48,37 @@
 
   --amber-alert: #F59E0B;
   --cyan-intel: #06B6D4;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --nx-slate-50: 15 23 42;
+  --nx-slate-100: 30 41 59;
+  --nx-slate-200: 51 65 85;
+  --nx-slate-300: 71 85 105;
+  --nx-slate-400: 71 85 105;
+  --nx-slate-500: 100 116 139;
+  --nx-slate-600: 148 163 184;
+  --nx-slate-700: 203 213 225;
+  --nx-slate-800: 226 232 240;
+  --nx-slate-900: 255 255 255;
+  --nx-slate-950: 248 250 252;
+  --nx-ink: 15 23 42;
+  --nx-paper: 255 255 255;
+  --nx-surface: 255 255 255;
+  --nx-mist: 71 85 105;
+  --background: #F8FAFC;
+  --foreground: #0F172A;
+  --paper: #FFFFFF;
+  --paper-200: #F1F5F9;
+  --surface: #FFFFFF;
+  --surface-200: #F1F5F9;
+  --border: #E2E8F0;
+  --muted: #475569;
+  --mist: #475569;
+  --ink: #0F172A;
+  --ink-300: #CBD5E1;
+  --ink-400: #E2E8F0;
 }
 
 html, body {
@@ -101,6 +148,16 @@ h1, h2, h3 {
   transform: translateY(-2px);
   box-shadow: 0 14px 35px -10px rgba(239, 68, 68, 0.15);
 }
+
+:root[data-theme="light"] .glass-panel,
+:root[data-theme="light"] .glass-card {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(15, 23, 42, 0.1);
+  box-shadow: 0 10px 30px -16px rgba(15, 23, 42, 0.2);
+}
+
+:root[data-theme="light"] ::-webkit-scrollbar-track { background: #F1F5F9; }
+:root[data-theme="light"] ::-webkit-scrollbar-thumb { background: #CBD5E1; }
 
 /* Custom scrollbars */
 ::-webkit-scrollbar {

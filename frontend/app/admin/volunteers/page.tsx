@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Activity, CheckCircle2, Search, XCircle } from "lucide-react";
+import { Activity, CheckCircle2, Search, Trash2, XCircle } from "lucide-react";
 import { api } from "@/lib/api";
 import { Button, Input, Label, Textarea } from "@/components/ui/input";
 import { VolunteerStatusBadge } from "@/components/ui/badge";
@@ -28,6 +28,8 @@ export default function AdminVolunteersPage() {
   const [busyId, setBusyId] = useState<number | null>(null);
   const [rejecting, setRejecting] = useState<VolunteerResponse | null>(null);
   const [reason, setReason] = useState("");
+  const [deleting, setDeleting] = useState<VolunteerResponse | null>(null);
+  const [confirmText, setConfirmText] = useState("");
 
   async function load() {
     setLoading(true);
@@ -86,6 +88,29 @@ export default function AdminVolunteersPage() {
       await load();
     } catch (e: any) {
       toast("error", "Could not reject", e.message);
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function confirmDelete() {
+    if (!deleting) return;
+    // Two-step confirmation: user must type the literal word DELETE to
+    // arm the button. The backend will refuse if the volunteer still has
+    // outstanding event invitations.
+    if (confirmText.trim().toUpperCase() !== "DELETE") {
+      toast("error", "Confirmation required", 'Type "DELETE" exactly to confirm.');
+      return;
+    }
+    setBusyId(deleting.id);
+    try {
+      await api(`/api/v1/admin/volunteers/${deleting.id}`, { method: "DELETE" });
+      toast("info", "Volunteer deleted", `${deleting.name} has been removed.`);
+      setDeleting(null);
+      setConfirmText("");
+      await load();
+    } catch (e: any) {
+      toast("error", "Could not delete volunteer", e.message);
     } finally {
       setBusyId(null);
     }
@@ -207,6 +232,18 @@ export default function AdminVolunteersPage() {
                         </Button>
                       </>
                     )}
+                    {/* Delete is always available — confirm modal requires
+                        typing "DELETE" before it fires, and the backend will
+                        refuse if the volunteer still has open invitations. */}
+                    <Button
+                      variant="ghost"
+                      onClick={() => setDeleting(v)}
+                      disabled={busyId === v.id}
+                      size="sm"
+                      className="text-red-400 hover:text-red-300 hover:bg-red-950/30"
+                    >
+                      <Trash2 className="h-4 w-4" /> Delete
+                    </Button>
                   </td>
                 </tr>
               ))}
@@ -240,6 +277,46 @@ export default function AdminVolunteersPage() {
               </Button>
               <Button onClick={confirmReject} disabled={busyId === rejecting.id}>
                 {busyId === rejecting.id ? "Rejecting…" : "Reject Volunteer"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete modal — typed confirmation prevents one-click data loss.
+          The backend will refuse if the volunteer still has outstanding
+          event invitations (a clear error will surface as a toast). */}
+      {deleting && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-ink/40">
+          <div className="bg-paper border border-red-500/40 rounded shadow-panel p-6 w-full max-w-md">
+            <div className="eyebrow mb-2 text-red-400">Delete {deleting.name}</div>
+            <h3 className="font-display text-xl text-ink mb-2">This cannot be undone.</h3>
+            <p className="text-sm text-mist mb-4">
+              Deleting this volunteer will permanently remove their account,
+              profile, skills, and password. If they still have outstanding
+              event invitations, you'll need to resolve those first.
+            </p>
+            <Label>Type <span className="font-mono text-red-400">DELETE</span> to confirm</Label>
+            <Input
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder="DELETE"
+              autoFocus
+              onKeyDown={(e) => e.key === "Enter" && confirmDelete()}
+            />
+            <div className="flex justify-end gap-2 mt-4">
+              <Button
+                variant="ghost"
+                onClick={() => { setDeleting(null); setConfirmText(""); }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={confirmDelete}
+                disabled={busyId === deleting.id || confirmText.trim().toUpperCase() !== "DELETE"}
+                className="bg-red-500 hover:bg-red-400 text-paper border-red-500"
+              >
+                {busyId === deleting.id ? "Deleting…" : "Delete Volunteer"}
               </Button>
             </div>
           </div>

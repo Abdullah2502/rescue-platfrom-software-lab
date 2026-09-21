@@ -32,7 +32,7 @@ function fromEvents(events: DisasterEventResponse[]): Row[] {
     title: e.title,
     status: e.status === "ONGOING" ? "ongoing" : e.status === "CLOSED" ? "closed" : "open",
     needed: e.requiredVolunteers,
-    accepted: e.acceptedCount,
+    accepted: e.participantCount,
   }));
 }
 

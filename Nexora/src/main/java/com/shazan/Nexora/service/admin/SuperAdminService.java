@@ -19,6 +19,8 @@ import com.shazan.Nexora.dto.volunteer.VolunteerResponse;
 import com.shazan.Nexora.email.EmailService;
 import com.shazan.Nexora.repository.event.DisasterEventRepository;
 import com.shazan.Nexora.repository.event.EventInvitationRepository;
+import com.shazan.Nexora.repository.event.EventParticipationRepository;
+import com.shazan.Nexora.repository.certificate.CertificateRepository;
 import com.shazan.Nexora.repository.location.DistrictRepository;
 import com.shazan.Nexora.repository.location.DivisionRepository;
 import com.shazan.Nexora.repository.location.ThanaRepository;
@@ -45,6 +47,8 @@ public class SuperAdminService {
     private final VolunteerRepository volunteerRepository;
     private final DisasterEventRepository eventRepository;
     private final EventInvitationRepository invitationRepository;
+    private final EventParticipationRepository participationRepository;
+    private final CertificateRepository certificateRepository;
     private final DivisionRepository divisionRepository;
     private final DistrictRepository districtRepository;
     private final ThanaRepository thanaRepository;
@@ -128,6 +132,7 @@ public class SuperAdminService {
         m.put("volunteersActive", volunteerRepository.countByStatus(VolunteerStatus.ACTIVE));
         m.put("eventsActive", eventRepository.countByStatus(com.shazan.Nexora.domain.enums.EventStatus.OPEN)
                 + eventRepository.countByStatus(com.shazan.Nexora.domain.enums.EventStatus.ONGOING));
+        m.put("certificatesIssued", certificateRepository.count());
         return m;
     }
 
@@ -169,6 +174,73 @@ public class SuperAdminService {
         }
     }
 
+    /**
+     * Delete a volunteer account on behalf of the super admin.
+     *
+     * Refuses when the volunteer still has outstanding event invitations —
+     * those need to be resolved (accepted / declined / cancelled) before the
+     * account can go. The {@code volunteer_skills} element-collection rows
+     * are removed automatically by Hibernate's cascade.
+     */
+    @Transactional
+    public void deleteVolunteer(Long volunteerId) {
+        Volunteer v = volunteerRepository.findById(volunteerId)
+                .orElseThrow(() -> ApiException.notFound("VOLUNTEER_NOT_FOUND", "Volunteer not found"));
+        long participations = participationRepository.countByVolunteer(v);
+        long certificates = certificateRepository.countByVolunteer(v);
+        long createdEvents = eventRepository.countByCreatedByVolunteer(v);
+        if (participations > 0 || certificates > 0 || createdEvents > 0) {
+            throw ApiException.conflict("VOLUNTEER_HAS_EVENT_HISTORY",
+                    "Volunteer has event or certificate history and cannot be deleted");
+        }
+        volunteerRepository.delete(v);
+    }
+
+    /**
+     * Delete an NGO on behalf of the super admin.
+     *
+     * The NGO is referenced by:
+     *   - {@code disaster_events.ngo_id}          (NOT NULL)
+     *   - {@code event_invitations.ngo_id}        (NOT NULL)
+     *   - {@code volunteers.recruited_by_ngo_id}  (NULLABLE)
+     *
+     * We remove the NGO's events and invitations first (the
+     * {@code event_divisions} / {@code event_districts} / {@code event_thanas}
+     * join tables cascade with the event rows), null out the recruiter
+     * pointer on any volunteers they added, then delete the NGO row.
+     * Counts are returned for an audit-friendly response.
+     */
+    @Transactional
+    public java.util.Map<String, Object> deleteNgo(Long ngoId) {
+        Ngo ngo = ngoRepository.findById(ngoId)
+                .orElseThrow(() -> ApiException.notFound("NGO_NOT_FOUND", "NGO not found"));
+        long events = eventRepository.countByNgo(ngo);
+        long invitations = invitationRepository.countByNgo(ngo);
+        long participations = eventRepository.findAllByNgo(ngo, PageRequest.of(0, 10000)).stream()
+                .mapToLong(participationRepository::countByEvent).sum();
+        long certificates = eventRepository.findAllByNgo(ngo, PageRequest.of(0, 10000)).stream()
+                .mapToLong(certificateRepository::countByEvent).sum();
+        long recruited = volunteerRepository.countByRecruitedByNgo(ngo);
+
+        // District / division / thana FKs on the NGO row itself are NOT NULL,
+        // so we don't have to worry about orphan-location cleanup.
+        certificateRepository.deleteByEventNgo(ngo);
+        participationRepository.deleteByEventNgo(ngo);
+        invitationRepository.deleteByNgo(ngo);
+        eventRepository.deleteByNgo(ngo);
+        volunteerRepository.clearRecruitedBy(ngo);
+        ngoRepository.delete(ngo);
+
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        result.put("deletedNgoId", ngoId);
+        result.put("removedEvents", events);
+        result.put("removedInvitations", invitations);
+        result.put("removedParticipations", participations);
+        result.put("removedCertificates", certificates);
+        result.put("unlinkedVolunteers", recruited);
+        return result;
+    }
+
     private NgoResponse toNgoResponse(Ngo ngo) {
         return new NgoResponse(
                 ngo.getId(), ngo.getName(), ngo.getEmail(), ngo.getRegistrationNo(),
@@ -205,15 +277,21 @@ public class SuperAdminService {
                 .map(d -> new LocationDto(d.getId(), d.getName(), d.getBnName(), d.getDivision().getId())).toList();
         List<LocationDto> thns = e.getThanas().stream()
                 .map(t -> new LocationDto(t.getId(), t.getName(), t.getBnName(), t.getDistrict().getId())).toList();
+        Long organizerId = e.getNgo() != null ? e.getNgo().getId()
+                : e.getCreatedByVolunteer() != null ? e.getCreatedByVolunteer().getId()
+                : e.getCreatedByAdmin() != null ? e.getCreatedByAdmin().getId() : null;
+        String organizerName = e.getNgo() != null ? e.getNgo().getName()
+                : e.getCreatedByVolunteer() != null ? e.getCreatedByVolunteer().getName()
+                : e.getCreatedByAdmin() != null ? e.getCreatedByAdmin().getName() : "Nexora";
+        String organizerType = e.getNgo() != null ? "NGO"
+                : e.getCreatedByVolunteer() != null ? "VOLUNTEER"
+                : e.getCreatedByAdmin() != null ? "ADMIN" : "PLATFORM";
         return new DisasterEventResponse(
                 e.getId(), e.getTitle(), e.getType(), e.getSeverity(), e.getDescription(),
                 divs, dists, thns,
                 e.getStartAt(), e.getEndAt(), e.getRequiredVolunteers(), e.getStatus(),
-                e.getNgo().getId(), e.getNgo().getName(),
-                invitationRepository.countByEventAndStatus(e, com.shazan.Nexora.domain.enums.InvitationStatus.ACCEPTED),
-                invitationRepository.countByEventAndStatus(e, com.shazan.Nexora.domain.enums.InvitationStatus.INVITED),
-                invitationRepository.countByEventAndStatus(e, com.shazan.Nexora.domain.enums.InvitationStatus.DECLINED),
-                invitationRepository.countByEventAndStatus(e, com.shazan.Nexora.domain.enums.InvitationStatus.DEPLOYED),
+                organizerId, organizerName, organizerType,
+                participationRepository.countByEvent(e), false,
                 e.getCreatedAt()
         );
     }

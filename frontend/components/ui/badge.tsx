@@ -1,6 +1,6 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import type { NgoStatus, InvitationStatus, EventStatus, VolunteerStatus, Severity, EventType } from "@/lib/types";
+import type { NgoStatus, EventStatus, VolunteerStatus, Severity, EventType } from "@/lib/types";
 
 const base = "inline-flex items-center gap-1.5 rounded px-2 py-0.5 text-xs font-medium border whitespace-nowrap";
 
@@ -28,15 +28,6 @@ export function NgoStatusBadge({ status }: { status: NgoStatus }) {
   if (status === "APPROVED") return <Badge tone="relief">Approved</Badge>;
   if (status === "PENDING") return <Badge tone="warning">Pending review</Badge>;
   return <Badge tone="signal">Rejected</Badge>;
-}
-
-export function InvitationStatusBadge({ status }: { status: InvitationStatus }) {
-  switch (status) {
-    case "INVITED":   return <Badge tone="warning">Invited</Badge>;
-    case "ACCEPTED":  return <Badge tone="relief">Accepted</Badge>;
-    case "DECLINED":  return <Badge tone="muted">Declined</Badge>;
-    case "DEPLOYED":  return <Badge tone="ink">Deployed</Badge>;
-  }
 }
 
 export function EventStatusBadge({ status }: { status: EventStatus }) {

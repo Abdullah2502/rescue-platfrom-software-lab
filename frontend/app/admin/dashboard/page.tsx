@@ -109,7 +109,7 @@ export default function AdminDashboard() {
                 href="/admin/events"
                 icon={<Megaphone className="h-6 w-6 text-emerald-400" />}
                 title="Monitor Active Events"
-                body="Track real-time disaster event dispatches, invitation response rates, and volunteer allocations."
+                body="Track real-time disaster events, participant counts, and certificate issuance."
               />
               <QuickAction
                 href="/admin/volunteers"

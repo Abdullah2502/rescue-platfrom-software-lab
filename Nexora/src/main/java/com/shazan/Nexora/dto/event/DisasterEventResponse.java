@@ -21,11 +21,10 @@ public record DisasterEventResponse(
         Instant endAt,
         Integer requiredVolunteers,
         EventStatus status,
-        Long ngoId,
-        String ngoName,
-        Long acceptedCount,
-        Long invitedCount,
-        Long declinedCount,
-        Long deployedCount,
+        Long organizerId,
+        String organizerName,
+        String organizerType,
+        Long participantCount,
+        boolean joinedByCurrentVolunteer,
         Instant createdAt
 ) {}

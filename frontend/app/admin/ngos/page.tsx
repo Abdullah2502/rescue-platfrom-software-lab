@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Activity, CheckCircle2, XCircle } from "lucide-react";
+import { Activity, CheckCircle2, Trash2, XCircle } from "lucide-react";
 import { api } from "@/lib/api";
 import { Button, Input, Label, Textarea } from "@/components/ui/input";
 import { NgoStatusBadge } from "@/components/ui/badge";
@@ -17,6 +17,8 @@ export default function AdminNgosPage() {
   const [busyId, setBusyId] = useState<number | null>(null);
   const [rejecting, setRejecting] = useState<NgoResponse | null>(null);
   const [reason, setReason] = useState("");
+  const [deleting, setDeleting] = useState<NgoResponse | null>(null);
+  const [confirmText, setConfirmText] = useState("");
 
   async function load() {
     setLoading(true);
@@ -64,6 +66,37 @@ export default function AdminNgosPage() {
       await load();
     } catch (e: any) { toast("error", "Could not reject", e.message); }
     finally { setBusyId(null); }
+  }
+
+  async function confirmDelete() {
+    if (!deleting) return;
+    // Two-step confirmation: user must type the literal word DELETE to
+    // arm the button. Destructive actions should never be one-click.
+    if (confirmText.trim().toUpperCase() !== "DELETE") {
+      toast("error", "Confirmation required", 'Type "DELETE" exactly to confirm.');
+      return;
+    }
+    setBusyId(deleting.id);
+    try {
+      const summary = await api<{
+        deletedNgoId: number;
+        removedEvents: number;
+        removedInvitations: number;
+        unlinkedVolunteers: number;
+      }>(`/api/v1/admin/ngos/${deleting.id}`, { method: "DELETE" });
+      toast(
+        "info",
+        "NGO deleted",
+        `${deleting.name}: ${summary.removedEvents} event(s), ${summary.removedInvitations} invitation(s), ${summary.unlinkedVolunteers} volunteer link(s) removed.`,
+      );
+      setDeleting(null);
+      setConfirmText("");
+      await load();
+    } catch (e: any) {
+      toast("error", "Could not delete NGO", e.message);
+    } finally {
+      setBusyId(null);
+    }
   }
 
   return (
@@ -145,6 +178,17 @@ export default function AdminNgosPage() {
                         </Button>
                       </>
                     )}
+                    {/* Delete is always available — the confirm modal asks the
+                        admin to type the literal word "DELETE" before firing. */}
+                    <Button
+                      variant="ghost"
+                      onClick={() => setDeleting(n)}
+                      disabled={busyId === n.id}
+                      size="sm"
+                      className="text-red-400 hover:text-red-300 hover:bg-red-950/30"
+                    >
+                      <Trash2 className="h-4 w-4" /> Delete
+                    </Button>
                   </td>
                 </tr>
               ))}
@@ -168,6 +212,46 @@ export default function AdminNgosPage() {
               <Button variant="ghost" onClick={() => { setRejecting(null); setReason(""); }}>Cancel</Button>
               <Button onClick={confirmReject} disabled={busyId === rejecting.id}>
                 {busyId === rejecting.id ? "Rejecting…" : "Reject NGO"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete modal — typed confirmation prevents one-click data loss.
+          Backend cascades the NGO's events and invitations, and unlinks the
+          volunteers they recruited. The toast on success reports the counts. */}
+      {deleting && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-ink/40">
+          <div className="bg-paper border border-red-500/40 rounded shadow-panel p-6 w-full max-w-md">
+            <div className="eyebrow mb-2 text-red-400">Delete {deleting.name}</div>
+            <h3 className="font-display text-xl text-ink mb-2">This cannot be undone.</h3>
+            <p className="text-sm text-mist mb-4">
+              Deleting this NGO will permanently remove every event they opened,
+              every invitation they sent, and clear the recruiter link on any
+              volunteers they added. Their account will be gone.
+            </p>
+            <Label>Type <span className="font-mono text-red-400">DELETE</span> to confirm</Label>
+            <Input
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder="DELETE"
+              autoFocus
+              onKeyDown={(e) => e.key === "Enter" && confirmDelete()}
+            />
+            <div className="flex justify-end gap-2 mt-4">
+              <Button
+                variant="ghost"
+                onClick={() => { setDeleting(null); setConfirmText(""); }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={confirmDelete}
+                disabled={busyId === deleting.id || confirmText.trim().toUpperCase() !== "DELETE"}
+                className="bg-red-500 hover:bg-red-400 text-paper border-red-500"
+              >
+                {busyId === deleting.id ? "Deleting…" : "Delete NGO"}
               </Button>
             </div>
           </div>

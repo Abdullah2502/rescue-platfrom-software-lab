@@ -30,7 +30,7 @@ export default function NgoEventsPage() {
       <PageHeader
         eyebrow="Operations"
         title="Disaster events."
-        description="Every event you've opened. Manage invitations and track who's accepted."
+        description="Every event you've opened. Volunteers join directly; you only need the live participant count."
         actions={
           <Link href="/ngo/events/new">
             <Button><Plus className="h-4 w-4" /> New event</Button>
@@ -77,8 +77,8 @@ export default function NgoEventsPage() {
                   <td className="text-xs font-mono text-mist">{formatDateTime(e.startAt)}</td>
                   <td className="text-xs font-mono text-mist">{formatDateTime(e.endAt)}</td>
                   <td className="text-xs">
-                    <div className="font-mono">{e.acceptedCount}/{e.requiredVolunteers}</div>
-                    <div className="text-mist">inv {e.invitedCount} · dec {e.declinedCount} · dep {e.deployedCount}</div>
+                    <div className="font-mono">{e.participantCount}/{e.requiredVolunteers}</div>
+                    <div className="text-mist">volunteers joined</div>
                   </td>
                   <td className="space-x-1">
                     <Link href={`/ngo/events/${e.id}`}>
