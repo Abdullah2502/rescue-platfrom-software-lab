@@ -428,18 +428,18 @@ frontend/
 
 ---
 
-## 8. Extensibility (Future Features from Feature SEL)
+## 8. Operational Modules and Extensibility
 
 | Feature | How to extend |
 |---------|---------------|
 | Role-Based auth | Already RBAC-ready; add new `ROLE_X` guards |
 | Dashboard & Stats | Add `/admin/stats`, `/ngo/stats` with aggregation |
 | Rescue requests | New `RescueRequest` entity + controller |
-| Shelters | `Shelter` entity under NGO |
-| Inventory | `InventoryItem` under NGO/event |
-| Distribution tracking | New entity with status FSM |
-| Interactive map | Add Leaflet + GIS layer |
-| Offline mode | PWA + Service Worker + IndexedDB queue |
+| Shelters | Implemented as NGO-owned `Shelter` records with live capacity and coordinates |
+| Inventory | Implemented as NGO-owned stock lines with shelter assignment, thresholds, and expiry |
+| Distribution tracking | Implemented with planned/completed/cancelled states and transactional stock deduction |
+| Interactive map | Implemented with Leaflet and OpenStreetMap shelter/distribution layers |
+| Offline mode | Implemented with a service worker and an IndexedDB mutation queue |
 | Report generation | JasperReports or OpenPDF for PDF |
 
 ---

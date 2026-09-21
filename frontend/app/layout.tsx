@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Outfit, Inter, JetBrains_Mono } from "next/font/google";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { OfflineSync } from "@/components/offline-sync";
+import "leaflet/dist/leaflet.css";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -46,6 +48,7 @@ export default function RootLayout({
           }}
         />
         {children}
+        <OfflineSync />
         <div className="fixed bottom-4 right-4 z-[100]">
           <ThemeToggle />
         </div>

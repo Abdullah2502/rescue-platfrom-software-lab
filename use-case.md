@@ -475,16 +475,16 @@ This document describes all use cases identified during requirements elicitation
 
 ---
 
-## Cross-Cutting Use Cases (Future, per Feature SEL)
+## Field Operations Use Cases
 
 | ID | Feature | Use Case Sketch |
 |----|---------|-----------------|
 | UC-F1 | Rescue requests | Citizens/Volunteers create rescue requests; NGO assigns volunteers |
-| UC-F2 | Shelters | NGO manages shelter list (capacity, location, occupancy) |
-| UC-F3 | Inventory | NGO/SA tracks supplies per event |
-| UC-F4 | Distribution | Track aid distribution (item, qty, beneficiary) |
-| UC-F5 | Interactive map | View all events/shelters/volunteers on a map |
-| UC-F6 | Offline distress signal | Volunteers file a distress signal with last location |
+| UC-F2 | Shelters | NGO creates and updates shelter location, capacity, occupancy, contact, and status; all roles can view active records |
+| UC-F3 | Inventory | NGO tracks categorized supplies by warehouse or shelter, including reorder thresholds and expiry |
+| UC-F4 | Distribution | NGO plans or completes an aid delivery; completion deducts stock and records recipients, time, and location |
+| UC-F5 | Interactive map | Authenticated users inspect shelter and distribution markers with operational details |
+| UC-F6 | Offline field collection | NGO submissions queue in IndexedDB and synchronize in order when connectivity returns |
 | UC-F7 | Report generation | SA generates PDF report (events, deployments, stats) |
 
 ---

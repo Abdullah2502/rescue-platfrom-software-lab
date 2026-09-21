@@ -1,7 +1,7 @@
 "use client";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { LayoutDashboard, Users, UserPlus, UploadCloud, Megaphone, Plus, Building2 } from "lucide-react";
+import { LayoutDashboard, Users, UserPlus, UploadCloud, Megaphone, Plus, Building2, Warehouse } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { AppShell } from "@/components/ui/sidebar";
 import { ToastHost } from "@/components/ui/toast";
@@ -13,6 +13,7 @@ const NAV = [
   { href: "/ngo/volunteers/bulk", label: "Bulk upload",   icon: UploadCloud },
   { href: "/ngo/events",          label: "Events",        icon: Megaphone },
   { href: "/ngo/events/new",      label: "Create event",  icon: Plus },
+  { href: "/ngo/operations",      label: "Field operations", icon: Warehouse },
   { href: "/ngo/profile",         label: "Profile",       icon: Building2 },
 ];
 

@@ -207,6 +207,34 @@ h1, h2, h3 {
   background: #475569;
 }
 
+.nexora-map-marker {
+  background: transparent;
+  border: 0;
+}
+
+.nexora-map-marker__dot {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 3px solid #fff;
+  border-radius: 9999px;
+  box-shadow: 0 6px 18px -4px rgba(15, 23, 42, 0.55);
+}
+
+.nexora-map-marker__dot--shelter { background: #059669; }
+.nexora-map-marker__dot--distribution { background: #DC2626; }
+
+.leaflet-container {
+  background: rgb(var(--nx-slate-800));
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: rgb(var(--nx-slate-900));
+  color: rgb(var(--nx-slate-100));
+}
+
 /* Modern component classes */
 @layer components {
   .nx-btn {

@@ -5,6 +5,9 @@ export type VolunteerStatus = "PENDING_VERIFICATION" | "ACTIVE" | "INACTIVE";
 export type EventType = "FLOOD" | "CYCLONE" | "EARTHQUAKE" | "FIRE" | "PANDEMIC" | "OTHER";
 export type Severity = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 export type EventStatus = "DRAFT" | "OPEN" | "ONGOING" | "CLOSED" | "CANCELLED";
+export type ShelterStatus = "OPEN" | "FULL" | "CLOSED";
+export type InventoryCategory = "FOOD" | "WATER" | "MEDICAL" | "HYGIENE" | "CLOTHING" | "EQUIPMENT" | "OTHER";
+export type DistributionStatus = "PLANNED" | "COMPLETED" | "CANCELLED";
 
 export interface Location { id: number; name: string; bnName?: string; parentId?: number | null; }
 
@@ -65,4 +68,31 @@ export interface CertificateGenerationResponse {
 export interface BulkUploadResponse {
   batchId: number; totalRows: number; successCount: number; failedCount: number;
   errors: { rowNumber: number; error: string }[];
+}
+
+export interface ShelterResponse {
+  id: number; ngoId: number; ngoName: string; name: string; address: string;
+  latitude: number; longitude: number; capacity: number; currentOccupancy: number;
+  contactName: string; contactPhone: string; status: ShelterStatus;
+  notes?: string; updatedAt?: string;
+}
+
+export interface InventoryItemResponse {
+  id: number; ngoId: number; ngoName: string; shelterId?: number | null; shelterName?: string | null;
+  name: string; category: InventoryCategory; quantity: number; unit: string;
+  reorderLevel: number; lowStock: boolean; expiryDate?: string | null;
+  notes?: string; updatedAt?: string;
+}
+
+export interface DistributionResponse {
+  id: number; ngoId: number; ngoName: string; shelterId?: number | null; shelterName?: string | null;
+  inventoryItemId: number; inventoryItemName: string; unit: string; recipientGroup: string;
+  quantity: number; distributedAt: string; locationDescription: string;
+  latitude?: number | null; longitude?: number | null; status: DistributionStatus;
+  notes?: string; createdAt?: string;
+}
+
+export interface OperationsSummaryResponse {
+  openShelters: number; availableBeds: number; inventoryItems: number;
+  lowStockItems: number; completedDistributions: number; totalUnitsDistributed: number;
 }

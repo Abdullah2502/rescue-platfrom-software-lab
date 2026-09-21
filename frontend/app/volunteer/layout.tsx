@@ -1,7 +1,7 @@
 "use client";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Award, CalendarDays, LayoutDashboard, UserCircle } from "lucide-react";
+import { Award, CalendarDays, LayoutDashboard, UserCircle, MapPinned } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { AppShell } from "@/components/ui/sidebar";
 import { ToastHost } from "@/components/ui/toast";
@@ -10,6 +10,7 @@ const NAV = [
   { href: "/volunteer/dashboard",    label: "Dashboard",    icon: LayoutDashboard, exact: true },
   { href: "/volunteer/events",       label: "Find events",  icon: CalendarDays },
   { href: "/volunteer/certificates",label: "Certificates", icon: Award },
+  { href: "/volunteer/operations", label: "Shelters & aid", icon: MapPinned },
   { href: "/volunteer/profile",      label: "Profile",      icon: UserCircle },
 ];
 
