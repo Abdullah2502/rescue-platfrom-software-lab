@@ -92,7 +92,7 @@ export default function RegisterNgoPage() {
   const hasLocation = !!location.divisionId && !!location.districtId && !!location.thanaId;
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#06090F] text-slate-100 selection:bg-red-500 selection:text-white">
+    <main className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-100 selection:bg-red-500 selection:text-white">
       {/* Ambient background — slate grid + warm/cool glows */}
       <div
         aria-hidden
@@ -119,13 +119,13 @@ export default function RegisterNgoPage() {
       />
 
       {/* Top status bar */}
-      <header className="relative z-20 border-b border-slate-800/80 bg-[#06090F]/80 backdrop-blur-xl">
+      <header className="relative z-20 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-xl">
         <div className="container flex h-14 items-center justify-between text-xs">
           <Link href="/" className="flex items-center gap-2.5 group">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-red-500 to-rose-600 shadow-[0_0_18px_-2px_rgba(239,68,68,0.6)] transition-transform group-hover:scale-105">
               <Activity className="h-4 w-4 text-white" />
             </div>
-            <span className="font-display text-base font-bold tracking-tight text-white">
+            <span className="font-display text-base font-bold tracking-tight text-slate-100">
               Nexora<span className="text-red-500">.</span>
             </span>
           </Link>
@@ -135,7 +135,7 @@ export default function RegisterNgoPage() {
           </div>
           <Link
             href="/login"
-            className="font-mono uppercase tracking-wider text-[11px] text-slate-400 transition hover:text-white"
+            className="font-mono uppercase tracking-wider text-[11px] text-slate-400 transition hover:text-slate-100"
           >
             Already have an account →
           </Link>
@@ -149,9 +149,9 @@ export default function RegisterNgoPage() {
             <Radio className="h-3 w-3 animate-pulse" />
             Onboarding · NGO Partner
           </div>
-          <h1 className="mt-6 font-display text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.02] tracking-tight text-white">
+          <h1 className="mt-6 font-display text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.02] tracking-tight text-slate-100">
             Stand up your{" "}
-            <span className="bg-gradient-to-r from-red-500 via-rose-400 to-amber-400 bg-clip-text text-transparent">
+            <span className="text-red-500">
               dispatch command
             </span>
             .
@@ -237,7 +237,7 @@ export default function RegisterNgoPage() {
                 <Clock className="h-3 w-3 text-slate-500" />
               </div>
               <div className="flex items-baseline gap-2">
-                <span className="font-display text-3xl font-bold text-white tabular-nums">14h</span>
+                <span className="font-display text-3xl font-bold text-slate-100 tabular-nums">14h</span>
                 <span className="text-xs text-slate-400">last 30 days</span>
               </div>
             </div>
@@ -414,7 +414,7 @@ function Fieldset({
             {index}
           </span>
           <div>
-            <div className="font-display text-lg font-bold text-white">{title}</div>
+            <div className="font-display text-lg font-bold text-slate-100">{title}</div>
           </div>
         </div>
         <div className="flex items-center gap-2 text-slate-500">

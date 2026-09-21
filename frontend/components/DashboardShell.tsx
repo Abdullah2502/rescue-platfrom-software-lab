@@ -17,7 +17,7 @@ export default function DashboardShell({ title, nav, children }: Props) {
     <div className="min-h-screen flex bg-slate-950 text-slate-100 font-sans">
       <aside className="w-64 shrink-0 border-r border-slate-800 bg-slate-950 p-5 space-y-6">
         <div>
-          <Link href="/" className="font-display text-xl font-bold text-white">
+          <Link href="/" className="font-display text-xl font-bold text-slate-100">
             Nexora<span className="text-red-500">.</span>
           </Link>
           <p className="mt-1 font-mono text-xs text-slate-400 truncate">
@@ -50,7 +50,7 @@ export default function DashboardShell({ title, nav, children }: Props) {
         </nav>
       </aside>
       <main className="flex-1 p-8 max-w-7xl mx-auto space-y-6">
-        <h1 className="font-display text-3xl font-bold text-white">{title}</h1>
+        <h1 className="font-display text-3xl font-bold text-slate-100">{title}</h1>
         <div>{children}</div>
       </main>
     </div>

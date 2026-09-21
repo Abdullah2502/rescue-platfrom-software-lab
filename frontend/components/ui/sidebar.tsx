@@ -5,7 +5,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { ChevronDown, LogOut, LucideIcon, Activity, Shield, User, Building } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth, logoutAndGoHome } from "@/lib/auth";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 type NavItem = {
   label: string;
@@ -56,7 +55,7 @@ export function AppShell({
               <div className="h-8 w-8 rounded-lg bg-red-600 flex items-center justify-center text-white shadow-glow-signal">
                 <Activity className="h-4 w-4" />
               </div>
-              <span className="font-display font-bold text-lg tracking-tight text-white">
+              <span className="font-display font-bold text-lg tracking-tight text-slate-100">
                 {brand}<span className="text-red-500">.</span>
               </span>
             </Link>
@@ -69,7 +68,6 @@ export function AppShell({
 
           {/* User Profile Dropdown */}
           <div className="flex items-center gap-2">
-            <ThemeToggle />
             <div className="relative">
             <button
               onClick={() => setMenuOpen((s) => !s)}
@@ -153,7 +151,7 @@ export function AppShell({
                 </div>
               )}
               {pageTitle && (
-                <h1 className="font-display text-3xl font-bold tracking-tight text-white">{pageTitle}</h1>
+                <h1 className="font-display text-3xl font-bold tracking-tight text-slate-100">{pageTitle}</h1>
               )}
               {pageDescription && <p className="text-sm text-slate-400 max-w-3xl">{pageDescription}</p>}
             </div>
