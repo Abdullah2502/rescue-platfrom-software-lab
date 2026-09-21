@@ -34,14 +34,14 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      data-theme="nexora"
+      data-theme="light"
       suppressHydrationWarning
       className={`${outfit.variable} ${inter.variable} ${jetbrains.variable}`}
     >
       <body className="min-h-screen bg-slate-950 text-slate-100 antialiased selection:bg-red-500 selection:text-white">
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('nexora-theme');if(!t)t=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';document.documentElement.dataset.theme=t;}catch(e){}})()`,
+            __html: `(function(){try{var t=localStorage.getItem('nexora-theme');if(!t)t='light';document.documentElement.dataset.theme=t;}catch(e){}})()`,
           }}
         />
         {children}
