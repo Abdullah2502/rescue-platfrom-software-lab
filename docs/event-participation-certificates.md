@@ -36,4 +36,4 @@ Certificates are issued automatically for current participation records when an 
 
 ## Theme
 
-The frontend supports dark and light mode from the account header. The preference is stored in `localStorage` as `nexora-theme` and respects the system preference on first load.
+The frontend defaults to light mode. Users can switch to dark mode from the account header; the preference is stored in `localStorage` as `nexora-theme` and overrides the default on later visits.
