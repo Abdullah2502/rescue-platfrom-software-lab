@@ -58,7 +58,7 @@ export default function HomePage() {
             </h1>
 
             <p className="max-w-2xl text-lg text-slate-400 leading-relaxed font-sans">
-              Nexora links non-governmental organizations and frontline volunteers across Bangladesh. Recruit verified rosters, dispatch real-time incident invitations, and mobilize responders across every Division, District, and Thana.
+              Nexora links non-governmental organizations and frontline volunteers across Bangladesh. Open a response event, let volunteers join directly, and keep participation records across every Division, District, and Thana.
             </p>
 
             <div className="pt-4 flex flex-wrap items-center gap-4">
@@ -119,15 +119,15 @@ export default function HomePage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <RoleCard
             badge="VOLUNTEERS"
-            title="Register once, deploy when called."
-            body="Specify location down to Thana level and record emergency skills. Receive direct SMS/Email invitations when disaster strikes nearby."
+            title="Find an event and join directly."
+            body="Keep your location and skills current, browse every open response effort, join when you can help, and withdraw whenever plans change."
             icon={<Users className="h-6 w-6 text-emerald-400" />}
             accent="emerald"
           />
           <RoleCard
             badge="NGO PARTNERS"
-            title="Manage rosters & trigger rapid dispatch."
-            body="Import volunteer lists via CSV or register members. Open emergency events, select target divisions, and monitor deployment acceptance live."
+            title="Open events and watch participation."
+            body="Import volunteer lists, create emergency events, and see the live number of volunteers who joined without sending invitations."
             icon={<Megaphone className="h-6 w-6 text-red-500" />}
             accent="red"
           />
@@ -141,7 +141,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Invitation System Showcase */}
+      {/* Self-join and certificate showcase */}
       <section className="border-y border-slate-800 bg-slate-900/40 relative">
         <div className="container py-20 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           <div className="lg:col-span-5 space-y-5">
@@ -149,17 +149,17 @@ export default function HomePage() {
               <AlertCircle className="h-4 w-4" /> DISPATCH WORKFLOW
             </div>
             <h2 className="font-display text-3xl sm:text-4xl font-bold text-white leading-snug">
-              An invitation is not just a notice. It is a rapid decision pipeline.
+              A join button turns intent into a coordinated response.
             </h2>
             <p className="text-slate-400 text-base leading-relaxed">
-              When an incident command creates a event, Nexora immediately matches available volunteers in target Thanas. Invitations follow a deterministic status chain:
+              When an incident command creates an event, every volunteer can see the brief, join directly, and withdraw any time. Afterward, admins can issue a verifiable certificate to everyone who joined.
             </p>
             <div className="inline-flex items-center gap-2 font-mono text-xs bg-slate-950 border border-slate-800 px-4 py-2 rounded-xl text-slate-300">
-              <span className="text-amber-400">INVITED</span>
+              <span className="text-amber-400">OPEN EVENT</span>
               <span className="text-slate-600">→</span>
-              <span className="text-emerald-400 font-bold">ACCEPTED</span>
+              <span className="text-emerald-400 font-bold">JOINED</span>
               <span className="text-slate-600">→</span>
-              <span className="text-red-400 font-bold">DEPLOYED</span>
+              <span className="text-red-400 font-bold">CERTIFIED</span>
             </div>
           </div>
 
@@ -176,9 +176,9 @@ export default function HomePage() {
               </div>
 
               <div className="space-y-4">
-                <InvitationRow name="Rahim Ahmed" area="Khulna · Bagerhat" status="ACCEPTED" time="2 mins ago" />
-                <InvitationRow name="Nasrin Sultana" area="Khulna · Mongla" status="ACCEPTED" time="5 mins ago" />
-                <InvitationRow name="Tariq Hasan" area="Khulna · Dacope" status="INVITED" time="7 mins ago" />
+                <InvitationRow name="Rahim Ahmed" area="Khulna · Bagerhat" status="JOINED" time="2 mins ago" />
+                <InvitationRow name="Nasrin Sultana" area="Khulna · Mongla" status="JOINED" time="5 mins ago" />
+                <InvitationRow name="Tariq Hasan" area="Khulna · Dacope" status="CERTIFIED" time="7 mins ago" />
               </div>
             </div>
           </div>

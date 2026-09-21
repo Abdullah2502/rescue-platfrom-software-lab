@@ -8,6 +8,8 @@ import com.shazan.Nexora.domain.location.District;
 import com.shazan.Nexora.domain.location.Division;
 import com.shazan.Nexora.domain.location.Thana;
 import com.shazan.Nexora.domain.ngo.Ngo;
+import com.shazan.Nexora.domain.admin.SuperAdmin;
+import com.shazan.Nexora.domain.volunteer.Volunteer;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -28,9 +30,17 @@ public class DisasterEvent extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "ngo_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ngo_id")
     private Ngo ngo;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by_volunteer_id")
+    private Volunteer createdByVolunteer;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by_admin_id")
+    private SuperAdmin createdByAdmin;
 
     @Column(nullable = false, length = 200)
     private String title;

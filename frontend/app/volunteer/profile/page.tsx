@@ -56,7 +56,7 @@ export default function VolunteerProfilePage() {
       <PageHeader
         eyebrow="Profile"
         title="Your details."
-        description="Keep your phone, skills and area current. NGOs match invitations to this profile."
+        description="Keep your phone, skills and area current so event details stay relevant."
       />
 
       <form onSubmit={save} className="space-y-10 max-w-3xl">

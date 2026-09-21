@@ -51,6 +51,7 @@ public class NgoService {
         return ngo;
     }
 
+    @Transactional(readOnly = true)
     public NgoResponse profile() {
         return toResponse(currentNgo());
     }
@@ -81,6 +82,7 @@ public class NgoService {
         return toResponse(ngo);
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<VolunteerResponse> searchVolunteers(Long divisionId, Long districtId, Long thanaId,
                                                             String q, int page, int size) {
         Ngo ngo = currentNgo();

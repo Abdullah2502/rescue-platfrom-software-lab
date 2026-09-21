@@ -1,10 +1,12 @@
 package com.shazan.Nexora.repository.volunteer;
 
 import com.shazan.Nexora.domain.enums.VolunteerStatus;
+import com.shazan.Nexora.domain.ngo.Ngo;
 import com.shazan.Nexora.domain.volunteer.Volunteer;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -13,6 +15,7 @@ import java.util.Optional;
 
 public interface VolunteerRepository extends JpaRepository<Volunteer, Long> {
     Optional<Volunteer> findByEmail(String email);
+    Optional<Volunteer> findByEmailIgnoreCase(String email);
     boolean existsByEmail(String email);
     long countByStatus(VolunteerStatus status);
 
@@ -61,4 +64,17 @@ public interface VolunteerRepository extends JpaRepository<Volunteer, Long> {
            """)
     List<Volunteer> findRecommendedForDivisions(@Param("divisionIds") List<Long> divisionIds,
                                                 @Param("skill") String skill);
+
+    /** Used by the super-admin "delete NGO" guard. */
+    long countByRecruitedByNgo(Ngo ngo);
+
+    /**
+     * Unset {@code recruited_by_ngo_id} on every volunteer that was added by
+     * this NGO. Called from the super-admin NGO delete flow after the NGO's
+     * own events/invitations have been deleted, so the FK constraint doesn't
+     * block the {@code ngos} row removal.
+     */
+    @Modifying
+    @Query("UPDATE Volunteer v SET v.recruitedByNgo = NULL WHERE v.recruitedByNgo = :ngo")
+    int clearRecruitedBy(@Param("ngo") Ngo ngo);
 }

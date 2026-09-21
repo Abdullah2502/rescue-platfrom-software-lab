@@ -21,7 +21,7 @@ export default function NgoDashboard() {
   const open = events?.content.filter((e) => e.status === "OPEN").length ?? 0;
   const ongoing = events?.content.filter((e) => e.status === "ONGOING").length ?? 0;
   const closed = events?.content.filter((e) => e.status === "CLOSED").length ?? 0;
-  const totalAccepted = events?.content.reduce((s, e) => s + (e.acceptedCount ?? 0), 0) ?? 0;
+  const totalAccepted = events?.content.reduce((s, e) => s + (e.participantCount ?? 0), 0) ?? 0;
 
   return (
     <div>
@@ -58,7 +58,7 @@ export default function NgoDashboard() {
         {events?.content.length === 0 ? (
           <EmptyState
             title="No events yet."
-            description="Open your first disaster event to start inviting volunteers."
+            description="Open your first disaster event so volunteers can join directly."
             action={
               <Link href="/ngo/events/new">
                 <Button>Create event</Button>
@@ -92,9 +92,9 @@ export default function NgoDashboard() {
                     <td className="text-xs font-mono text-mist">{formatDateTime(e.startAt)}</td>
                     <td className="text-xs">
                       <span className="font-mono">
-                        {e.acceptedCount}/{e.requiredVolunteers}
+                        {e.participantCount}/{e.requiredVolunteers}
                       </span>
-                      <span className="text-mist"> · invited {e.invitedCount} · declined {e.declinedCount}</span>
+                      <span className="text-mist"> · volunteers joined</span>
                     </td>
                   </tr>
                 ))}

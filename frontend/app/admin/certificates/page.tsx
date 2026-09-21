@@ -1,0 +1,7 @@
+"use client";
+import { useEffect, useState } from "react";
+import { Award } from "lucide-react";
+import { api } from "@/lib/api";
+import { EmptyState, PageHeader } from "@/components/ui/page";
+import type { CertificateResponse } from "@/lib/types";
+export default function AdminCertificatesPage() { const [list, setList] = useState<CertificateResponse[]>([]); useEffect(() => { api<CertificateResponse[]>("/api/v1/admin/certificates").then(setList).catch(() => {}); }, []); return <div><PageHeader title="Certificate registry." description="Every certificate issued from a joined event, with its verification number." />{list.length === 0 ? <EmptyState icon={<Award className="h-10 w-10 mx-auto" />} title="No certificates issued yet." description="Open an event and generate certificates for its participants." /> : <div className="border border-ink-300 rounded bg-surface overflow-hidden"><table className="nx-table"><thead><tr><th>Certificate</th><th>Volunteer</th><th>Event</th><th>Issued</th></tr></thead><tbody>{list.map((certificate) => <tr key={certificate.id}><td className="font-mono text-xs text-signal">{certificate.certificateNumber}</td><td className="text-sm text-ink">{certificate.volunteerName}</td><td className="text-sm">{certificate.eventTitle}</td><td className="text-xs text-mist">{new Date(certificate.issuedAt).toLocaleDateString()}</td></tr>)}</tbody></table></div>}</div>; }

@@ -274,7 +274,7 @@ export default function RegisterVolunteerPage() {
           {/* Submit bar */}
           <div className="flex flex-col-reverse items-stretch justify-between gap-4 border-t border-slate-800 pt-6 sm:flex-row sm:items-center">
             <p className="font-mono text-[10px] uppercase tracking-wider text-slate-500">
-              By registering you agree to receive invitations from verified NGOs.
+              By registering you agree to participate in verified disaster response events.
             </p>
             <Button
               type="submit"
@@ -338,7 +338,7 @@ function PendingConfirmationPanel({ name, email }: { name: string; email: string
           <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
           <span>
             You'll receive another email the moment your account is approved. After that,
-            you can sign in and start accepting invitations from NGOs.
+            you can sign in, browse open events, and join directly.
           </span>
         </li>
       </ul>

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { LayoutDashboard, ShieldCheck, Users, Megaphone, Map } from "lucide-react";
+import { Award, LayoutDashboard, ShieldCheck, Users, Megaphone, Map, Plus } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { AppShell } from "@/components/ui/sidebar";
 import { ToastHost } from "@/components/ui/toast";
@@ -11,6 +11,8 @@ const NAV = [
   { href: "/admin/ngos",       label: "NGO approvals", icon: ShieldCheck },
   { href: "/admin/volunteers", label: "Volunteers",    icon: Users },
   { href: "/admin/events",     label: "All events",    icon: Megaphone },
+  { href: "/admin/events/new", label: "Create event",  icon: Plus },
+  { href: "/admin/certificates", label: "Certificates", icon: Award },
   { href: "/admin/locations",  label: "Locations",     icon: Map },
 ];
 
