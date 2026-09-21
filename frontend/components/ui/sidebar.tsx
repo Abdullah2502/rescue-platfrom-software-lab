@@ -49,7 +49,7 @@ export function AppShell({
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
       {/* Glass Top Header Bar */}
       <header className="sticky top-0 z-40 border-b border-slate-800 bg-slate-950/80 backdrop-blur-xl">
-        <div className="flex items-center justify-between px-6 h-16">
+        <div className="flex items-center justify-between px-4 sm:px-6 h-16">
           <div className="flex items-center gap-4">
             <Link href="/" className="flex items-center gap-2 group">
               <div className="h-8 w-8 rounded-lg bg-red-600 flex items-center justify-center text-white shadow-glow-signal">
@@ -60,7 +60,7 @@ export function AppShell({
               </span>
             </Link>
 
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-[11px] font-mono font-bold tracking-wider text-red-400">
+            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-[11px] font-mono font-bold tracking-wider text-red-400">
               <RoleIcon className="h-3.5 w-3.5" />
               <span>{roleLabel}</span>
             </div>
@@ -76,7 +76,7 @@ export function AppShell({
               <div className="h-6 w-6 rounded-full bg-red-500/20 text-red-400 border border-red-500/30 flex items-center justify-center font-mono font-bold text-[10px]">
                 {principal?.name?.substring(0, 1) ?? "U"}
               </div>
-              <span>{principal?.name ?? "Account"}</span>
+              <span className="hidden sm:inline">{principal?.name ?? "Account"}</span>
               <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
             </button>
 
@@ -102,9 +102,29 @@ export function AppShell({
         </div>
       </header>
 
+      <nav className="sticky top-16 z-30 flex gap-1 overflow-x-auto border-b border-slate-800 bg-slate-950/95 px-3 py-2 backdrop-blur-xl md:hidden" aria-label="Mobile navigation">
+        {nav.map((item) => {
+          const active = item.exact ? pathname === item.href : pathname?.startsWith(item.href);
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "inline-flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold",
+                active ? "bg-red-600 text-white" : "text-slate-400 hover:bg-slate-900 hover:text-slate-100",
+              )}
+            >
+              <Icon className="h-3.5 w-3.5" />
+              {item.label}
+            </Link>
+          );
+        })}
+      </nav>
+
       <div className="flex flex-1">
         {/* Left Sidebar Navigation */}
-        <aside className="w-64 shrink-0 border-r border-slate-800/80 bg-slate-950/60 p-4 space-y-6">
+        <aside className="hidden w-64 shrink-0 border-r border-slate-800/80 bg-slate-950/60 p-4 space-y-6 md:block">
           <nav className="space-y-1.5">
             <div className="px-3 pb-2 text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest">
               Navigation
@@ -142,7 +162,7 @@ export function AppShell({
         </aside>
 
         {/* Main Content Dashboard Area */}
-        <main className="flex-1 p-8 max-w-7xl mx-auto w-full space-y-8">
+        <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full space-y-8">
           {(pageTitle || pageEyebrow) && (
             <div className="space-y-2 border-b border-slate-800 pb-6">
               {pageEyebrow && (

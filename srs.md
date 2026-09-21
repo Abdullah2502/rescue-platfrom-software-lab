@@ -225,12 +225,17 @@ A standalone web application with:
 | **DisasterEvent** | id, ngoId, title, type, severity, description, locationDivisionIds, locationDistrictIds, locationThanaIds, startAt, endAt, requiredVolunteers, status, createdAt |
 | **EventInvitation** | id, eventId, volunteerId, ngoId, status (INVITED/ACCEPTED/DECLINED/DEPLOYED), respondedAt |
 | **BulkUploadBatch** | id, ngoId, filename, totalRows, successCount, failedCount, errorsJson, createdAt |
+| **Shelter** | id, ngoId, name, address, latitude, longitude, capacity, currentOccupancy, contactName, contactPhone, status, notes |
+| **InventoryItem** | id, ngoId, shelterId, name, category, quantity, unit, reorderLevel, expiryDate, notes |
+| **DistributionRecord** | id, ngoId, shelterId, inventoryItemId, recipientGroup, quantity, distributedAt, location, coordinates, status, notes |
 
 ### 4.2 Relationships
 - `Ngo 1—* DisasterEvent`
 - `Ngo 1—* Volunteer` (via NgoVolunteer join) — NGO can recruit any volunteer whose location matches the NGO's filter.
 - `DisasterEvent *—* Volunteer` (via EventInvitation)
 - `Division 1—* District 1—* Thana`
+- `Ngo 1—* Shelter 1—* InventoryItem`
+- `InventoryItem 1—* DistributionRecord`
 
 ---
 
@@ -258,6 +263,10 @@ See `use-case.md` for full details. High-level summary:
 | Volunteer receives email when added/invited | Email log verification |
 | Volunteer can accept/decline an invitation | API + UI test |
 | Location dropdowns cascade properly | Unit test |
+| NGO can manage shelters and live occupancy | API + UI test |
+| Completed distributions deduct available stock | JUnit service test |
+| Offline operational writes synchronize without duplicates | Browser integration test |
+| Volunteers and administrators can view the operational map | Responsive UI test |
 
 ---
 
