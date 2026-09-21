@@ -14,15 +14,20 @@ export default function VolunteerProfilePage() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    api<VolunteerResponse>("/api/v1/volunteer/dashboard").then((v) => {
-      setMe(v);
-      setForm({ phone: v.phone, nid: v.nid ?? "", skills: v.skills.join(", ") });
-      setLocation({
-        divisionId: v.division?.id,
-        districtId: v.district?.id,
-        thanaId: v.thana?.id,
+    api<VolunteerResponse>("/api/v1/volunteer/dashboard")
+      .then((v) => {
+        setMe(v);
+        setForm({ phone: v.phone, nid: v.nid ?? "", skills: v.skills.join(", ") });
+        setLocation({
+          divisionId: v.division?.id,
+          districtId: v.district?.id,
+          thanaId: v.thana?.id,
+        });
+      })
+      .catch((err) => {
+        console.error("Failed to load volunteer profile:", err);
+        toast("error", "Load failed", err.message || "Could not load profile data.");
       });
-    }).catch(() => {});
   }, []);
 
   async function save(e: React.FormEvent) {

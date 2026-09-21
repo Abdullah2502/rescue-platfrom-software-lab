@@ -59,10 +59,14 @@ public class NgoService {
     @Transactional
     public NgoResponse updateProfile(NgoProfileUpdateRequest req) {
         Ngo ngo = currentNgo();
-        if (req.name() != null) ngo.setName(req.name());
-        if (req.phone() != null) ngo.setPhone(req.phone());
-        if (req.website() != null) ngo.setWebsite(req.website());
-        if (req.logoUrl() != null) ngo.setLogoUrl(req.logoUrl());
+        if (req.name() != null)
+            ngo.setName(req.name());
+        if (req.phone() != null)
+            ngo.setPhone(req.phone());
+        if (req.website() != null)
+            ngo.setWebsite(req.website());
+        if (req.logoUrl() != null)
+            ngo.setLogoUrl(req.logoUrl());
         if (req.divisionId() != null) {
             Division d = divisionRepository.findById(req.divisionId())
                     .orElseThrow(() -> ApiException.badRequest("DIVISION_NOT_FOUND", "Invalid division"));
@@ -84,7 +88,7 @@ public class NgoService {
 
     @Transactional(readOnly = true)
     public PageResponse<VolunteerResponse> searchVolunteers(Long divisionId, Long districtId, Long thanaId,
-                                                            String q, int page, int size) {
+            String q, int page, int size) {
         Ngo ngo = currentNgo();
         // default division = NGO's division if no filter provided
         Long div = divisionId != null ? divisionId : (ngo.getDivision() != null ? ngo.getDivision().getId() : null);
@@ -93,8 +97,10 @@ public class NgoService {
         // NGOs can only invite ACTIVE volunteers — pending-verification
         // accounts are not visible until the super admin approves them.
         Page<Volunteer> p = hasText
-                ? volunteerRepository.searchByText(div, districtId, thanaId, com.shazan.Nexora.domain.enums.VolunteerStatus.ACTIVE, q.trim(), pageable)
-                : volunteerRepository.search(div, districtId, thanaId, com.shazan.Nexora.domain.enums.VolunteerStatus.ACTIVE, pageable);
+                ? volunteerRepository.searchByText(div, districtId, thanaId,
+                        com.shazan.Nexora.domain.enums.VolunteerStatus.ACTIVE, q.trim(), pageable)
+                : volunteerRepository.search(div, districtId, thanaId,
+                        com.shazan.Nexora.domain.enums.VolunteerStatus.ACTIVE, pageable);
         return PageResponse.from(p.map(this::toVolunteerResponse));
     }
 
@@ -118,15 +124,20 @@ public class NgoService {
         }
         Division division = divisionRepository.findById(req.divisionId())
                 .orElseThrow(() -> ApiException.badRequest("DIVISION_NOT_FOUND", "Invalid division"));
-        District district = req.districtId() == null ? null : districtRepository.findById(req.districtId())
-                .orElseThrow(() -> ApiException.badRequest("DISTRICT_NOT_FOUND", "Invalid district"));
-        Thana thana = req.thanaId() == null ? null : thanaRepository.findById(req.thanaId())
-                .orElseThrow(() -> ApiException.badRequest("THANA_NOT_FOUND", "Invalid thana"));
+        District district = req.districtId() == null ? null
+                : districtRepository.findById(req.districtId())
+                        .orElseThrow(() -> ApiException.badRequest("DISTRICT_NOT_FOUND", "Invalid district"));
+        Thana thana = req.thanaId() == null ? null
+                : thanaRepository.findById(req.thanaId())
+                        .orElseThrow(() -> ApiException.badRequest("THANA_NOT_FOUND", "Invalid thana"));
 
-        String tempPassword = java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 16);
+        // Changed to default password "12345678"
+        String tempPassword = "12345678";
+
         Volunteer v = Volunteer.builder()
                 .name(req.name()).email(req.email())
-                .passwordHash(new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder(10).encode(tempPassword))
+                .passwordHash(
+                        new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder(10).encode(tempPassword))
                 .phone(req.phone()).nid(req.nid())
                 .dateOfBirth(req.dateOfBirth()).gender(req.gender())
                 .division(division).district(district).thana(thana)
@@ -135,7 +146,11 @@ public class NgoService {
                 .recruitedByNgo(ngo)
                 .build();
         volunteerRepository.save(v);
-        email.sendVolunteerAddedByNgo(v, ngo, "https://nexora.bd/set-password?email=" + v.getEmail());
+
+        // Email generation skipped for now
+        // email.sendVolunteerAddedByNgo(v, ngo, "https://nexora.bd/set-password?email="
+        // + v.getEmail());
+
         return toVolunteerResponse(v);
     }
 
@@ -165,11 +180,16 @@ public class NgoService {
         return new NgoResponse(
                 ngo.getId(), ngo.getName(), ngo.getEmail(), ngo.getRegistrationNo(),
                 ngo.getLogoUrl(), ngo.getPhone(), ngo.getWebsite(),
-                ngo.getDivision() == null ? null : new LocationDto(ngo.getDivision().getId(), ngo.getDivision().getName(), ngo.getDivision().getBnName(), null),
-                ngo.getDistrict() == null ? null : new LocationDto(ngo.getDistrict().getId(), ngo.getDistrict().getName(), ngo.getDistrict().getBnName(), ngo.getDistrict().getDivision().getId()),
-                ngo.getThana() == null ? null : new LocationDto(ngo.getThana().getId(), ngo.getThana().getName(), ngo.getThana().getBnName(), ngo.getThana().getDistrict().getId()),
-                ngo.getStatus(), ngo.getRejectionReason(), ngo.getApprovedAt(), ngo.getCreatedAt()
-        );
+                ngo.getDivision() == null ? null
+                        : new LocationDto(ngo.getDivision().getId(), ngo.getDivision().getName(),
+                                ngo.getDivision().getBnName(), null),
+                ngo.getDistrict() == null ? null
+                        : new LocationDto(ngo.getDistrict().getId(), ngo.getDistrict().getName(),
+                                ngo.getDistrict().getBnName(), ngo.getDistrict().getDivision().getId()),
+                ngo.getThana() == null ? null
+                        : new LocationDto(ngo.getThana().getId(), ngo.getThana().getName(), ngo.getThana().getBnName(),
+                                ngo.getThana().getDistrict().getId()),
+                ngo.getStatus(), ngo.getRejectionReason(), ngo.getApprovedAt(), ngo.getCreatedAt());
     }
 
     private VolunteerResponse toVolunteerResponse(Volunteer v) {
@@ -180,11 +200,16 @@ public class NgoService {
         return new VolunteerResponse(
                 v.getId(), v.getName(), v.getEmail(), v.getPhone(), v.getNid(),
                 v.getDateOfBirth(), v.getGender(),
-                v.getDivision() == null ? null : new LocationDto(v.getDivision().getId(), v.getDivision().getName(), v.getDivision().getBnName(), null),
-                v.getDistrict() == null ? null : new LocationDto(v.getDistrict().getId(), v.getDistrict().getName(), v.getDistrict().getBnName(), v.getDistrict().getDivision().getId()),
-                v.getThana() == null ? null : new LocationDto(v.getThana().getId(), v.getThana().getName(), v.getThana().getBnName(), v.getThana().getDistrict().getId()),
-                safeSkills, v.getStatus()
-        );
+                v.getDivision() == null ? null
+                        : new LocationDto(v.getDivision().getId(), v.getDivision().getName(),
+                                v.getDivision().getBnName(), null),
+                v.getDistrict() == null ? null
+                        : new LocationDto(v.getDistrict().getId(), v.getDistrict().getName(),
+                                v.getDistrict().getBnName(), v.getDistrict().getDivision().getId()),
+                v.getThana() == null ? null
+                        : new LocationDto(v.getThana().getId(), v.getThana().getName(), v.getThana().getBnName(),
+                                v.getThana().getDistrict().getId()),
+                safeSkills, v.getStatus());
     }
 
     public List<Long> getNgoDivisionIds() {

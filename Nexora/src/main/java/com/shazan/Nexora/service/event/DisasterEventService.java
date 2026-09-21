@@ -21,6 +21,7 @@ import com.shazan.Nexora.repository.event.EventParticipationRepository;
 import com.shazan.Nexora.repository.location.DistrictRepository;
 import com.shazan.Nexora.repository.location.DivisionRepository;
 import com.shazan.Nexora.repository.location.ThanaRepository;
+import com.shazan.Nexora.repository.ngo.NgoRepository;
 import com.shazan.Nexora.repository.volunteer.VolunteerRepository;
 import com.shazan.Nexora.security.CurrentUser;
 import com.shazan.Nexora.service.ngo.NgoService;
@@ -45,6 +46,7 @@ public class DisasterEventService {
     private final DivisionRepository divisionRepository;
     private final DistrictRepository districtRepository;
     private final ThanaRepository thanaRepository;
+    private final NgoRepository ngoRepository;
     private final NgoService ngoService;
     private final CertificateService certificateService;
 
@@ -87,8 +89,15 @@ public class DisasterEventService {
         var current = CurrentUser.require();
         SuperAdmin admin = adminRepository.findById(current.id())
                 .orElseThrow(() -> ApiException.notFound("ADMIN_NOT_FOUND", "Administrator not found"));
+
         DisasterEvent event = buildEvent(req);
         event.setCreatedByAdmin(admin);
+
+        // Fetch and assign the NGO chosen by the admin
+        Ngo assignedNgo = ngoRepository.findById(req.ngoId())
+                .orElseThrow(() -> ApiException.notFound("NGO_NOT_FOUND", "Assigned NGO not found"));
+        event.setNgo(assignedNgo);
+
         return toResponse(eventRepository.save(event));
     }
 
@@ -122,10 +131,10 @@ public class DisasterEventService {
         DisasterEvent event = loadEvent(eventId);
         boolean allowed = Role.ROLE_SUPER_ADMIN.name().equals(current.role())
                 || (Role.ROLE_NGO_ADMIN.name().equals(current.role())
-                    && event.getNgo() != null && event.getNgo().getId().equals(current.ngoId()))
+                        && event.getNgo() != null && event.getNgo().getId().equals(current.ngoId()))
                 || (Role.ROLE_VOLUNTEER.name().equals(current.role())
-                    && event.getCreatedByVolunteer() != null
-                    && event.getCreatedByVolunteer().getId().equals(current.id()));
+                        && event.getCreatedByVolunteer() != null
+                        && event.getCreatedByVolunteer().getId().equals(current.id()));
         if (!allowed) {
             throw ApiException.forbidden("NOT_EVENT_OWNER", "Only the event creator or a super admin can update it");
         }
@@ -213,12 +222,42 @@ public class DisasterEventService {
 
         return new DisasterEventResponse(
                 event.getId(), event.getTitle(), event.getType(), event.getSeverity(), event.getDescription(),
-                event.getDivisions().stream().map(d -> new LocationDto(d.getId(), d.getName(), d.getBnName(), null)).toList(),
-                event.getDistricts().stream().map(d -> new LocationDto(d.getId(), d.getName(), d.getBnName(), d.getDivision().getId())).toList(),
-                event.getThanas().stream().map(t -> new LocationDto(t.getId(), t.getName(), t.getBnName(), t.getDistrict().getId())).toList(),
+                event.getDivisions().stream().map(d -> new LocationDto(d.getId(), d.getName(), d.getBnName(), null))
+                        .toList(),
+                event.getDistricts().stream()
+                        .map(d -> new LocationDto(d.getId(), d.getName(), d.getBnName(), d.getDivision().getId()))
+                        .toList(),
+                event.getThanas().stream()
+                        .map(t -> new LocationDto(t.getId(), t.getName(), t.getBnName(), t.getDistrict().getId()))
+                        .toList(),
                 event.getStartAt(), event.getEndAt(), event.getRequiredVolunteers(), event.getStatus(),
                 organizerId, organizerName, organizerType,
-                participationRepository.countByEvent(event), joined, event.getCreatedAt()
-        );
+                participationRepository.countByEvent(event), joined, event.getCreatedAt());
+    }
+
+    // Add this to your public methods
+    @Transactional(readOnly = true)
+    public PageResponse<DisasterEventResponse> listPublicActiveEvents(int page, int size) {
+        var pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        // Fetch only OPEN and ONGOING events for the homepage
+        return PageResponse.from(eventRepository.findAllByStatusIn(
+                List.of(EventStatus.OPEN, EventStatus.ONGOING), pageable).map(this::toPublicResponse));
+    }
+
+    // Add this helper method at the bottom of the file
+    private DisasterEventResponse toPublicResponse(DisasterEvent event) {
+        String organizerName = "Nexora Platform";
+        if (event.getNgo() != null) {
+            organizerName = event.getNgo().getName();
+        } else if (event.getCreatedByAdmin() != null) {
+            organizerName = event.getCreatedByAdmin().getName();
+        }
+
+        return new DisasterEventResponse(
+                event.getId(), event.getTitle(), event.getType(), event.getSeverity(), event.getDescription(),
+                List.of(), List.of(), List.of(), // Locations omitted for homepage brevity
+                event.getStartAt(), event.getEndAt(), event.getRequiredVolunteers(), event.getStatus(),
+                null, organizerName, "PUBLIC",
+                participationRepository.countByEvent(event), false, event.getCreatedAt());
     }
 }

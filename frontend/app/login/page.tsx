@@ -9,6 +9,13 @@ import { ErrorState } from "@/components/ui/page";
 import type { AuthResponse } from "@/lib/types";
 import { ArrowRight, ShieldCheck, Activity, Radio } from "lucide-react";
 
+interface SystemStats {
+  activeEvents: number;
+  deployedPersonnel: number;
+  avgResponseTime: string;
+  totalVolunteers: number;
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const setSession = useAuth((s) => s.setSession);
@@ -18,7 +25,15 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [clock, setClock] = useState<string>("");
 
-  // Live Dhaka clock — a small operational detail that earns the "command bridge" feel
+  // Dynamic stats state
+  const [stats, setStats] = useState<SystemStats>({
+    activeEvents: 0,
+    deployedPersonnel: 0,
+    avgResponseTime: "—",
+    totalVolunteers: 0,
+  });
+
+  // Live Dhaka clock 
   useEffect(() => {
     const tick = () => {
       try {
@@ -37,6 +52,30 @@ export default function LoginPage() {
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
+  }, []);
+
+  // Fetch live stats on mount and poll periodically
+  useEffect(() => {
+    let isMounted = true;
+
+    async function fetchStats() {
+      try {
+        const data = await api<SystemStats>("/api/v1/telemetry/public-stats");
+        if (isMounted) {
+          setStats(data);
+        }
+      } catch {
+        // Fallback or keep previous state silently if telemetry endpoint fails
+      }
+    }
+
+    fetchStats();
+    const intervalId = setInterval(fetchStats, 30000); // Poll every 30s
+
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
+    };
   }, []);
 
   async function onSubmit(e: React.FormEvent) {
@@ -152,16 +191,32 @@ export default function LoginPage() {
 
           {/* Live stats row */}
           <dl className="mt-8 grid grid-cols-2 gap-x-6 gap-y-4 border-t border-slate-800/80 pt-6 sm:grid-cols-4">
-            <Metric value="02" label="Active events" hint="Live" pulse />
-            <Metric value="1,284" label="Deployed" hint="YTD" />
-            <Metric value="8m 22s" label="Avg response" hint="Median" />
-            <Metric value="12,430" label="Volunteers" hint="Network" />
+            <Metric
+              value={String(stats.activeEvents).padStart(2, "0")}
+              label="Active events"
+              hint="Live"
+              pulse
+            />
+            <Metric
+              value={stats.deployedPersonnel.toLocaleString()}
+              label="Deployed"
+              hint="YTD"
+            />
+            <Metric
+              value={stats.avgResponseTime}
+              label="Avg response"
+              hint="Median"
+            />
+            <Metric
+              value={stats.totalVolunteers.toLocaleString()}
+              label="Volunteers"
+              hint="Network"
+            />
           </dl>
         </section>
 
         {/* RIGHT — login control panel */}
         <section className="relative lg:col-span-5 flex items-center py-8 lg:py-16">
-          {/* Vertical hairline divider on lg+ */}
           <span
             aria-hidden
             className="absolute left-0 top-12 bottom-12 hidden w-px bg-gradient-to-b from-transparent via-red-500/30 to-transparent lg:block"
@@ -285,12 +340,7 @@ export default function LoginPage() {
   );
 }
 
-/* ----------------------------------------------------------------------------
- * Tactical map — stylized Bangladesh with division nodes and a live pulse
- * -------------------------------------------------------------------------- */
-
 function TacticalMap() {
-  // Approximate positions of 8 divisions on a 600x340 svg canvas
   const divisions = [
     { id: "DHK", label: "Dhaka", x: 305, y: 175, status: "alert" },
     { id: "CTG", label: "Chattogram", x: 420, y: 270, status: "ok" },
@@ -304,7 +354,6 @@ function TacticalMap() {
 
   return (
     <div className="relative overflow-hidden rounded-xl border border-slate-800/80 bg-slate-900/40 p-5 backdrop-blur-sm">
-      {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
         <div className="flex items-center gap-2 font-mono text-[11px] font-semibold uppercase tracking-wider text-slate-300">
           <span className="inline-flex h-1.5 w-1.5 animate-pulse rounded-full bg-amber-400" />
@@ -315,7 +364,6 @@ function TacticalMap() {
         </span>
       </div>
 
-      {/* SVG map */}
       <div className="relative mt-4">
         <svg
           viewBox="0 0 600 340"
@@ -334,7 +382,6 @@ function TacticalMap() {
             </radialGradient>
           </defs>
 
-          {/* Stylized country outline (deliberately simplified) */}
           <path
             d="M250,40 C320,30 410,55 460,90 C510,125 520,170 490,215 C460,260 400,310 320,315 C240,320 180,290 160,250 C140,210 150,170 170,130 C190,90 210,55 250,40 Z"
             fill="rgba(15,23,42,0.6)"
@@ -342,7 +389,6 @@ function TacticalMap() {
             strokeWidth="1"
           />
 
-          {/* Inner administrative grid lines */}
           <g stroke="rgba(148,163,184,0.12)" strokeWidth="0.5" fill="none">
             <path d="M180,90 L420,90" />
             <path d="M160,160 L480,160" />
@@ -351,7 +397,6 @@ function TacticalMap() {
             <path d="M380,55 L420,290" />
           </g>
 
-          {/* Connection lines between division nodes */}
           <g
             stroke="rgba(239,68,68,0.25)"
             strokeWidth="0.75"
@@ -367,7 +412,6 @@ function TacticalMap() {
             <path d="M305,175 L250,55" />
           </g>
 
-          {/* Division nodes */}
           {divisions.map((d) => (
             <g key={d.id} transform={`translate(${d.x},${d.y})`}>
               <circle
@@ -395,7 +439,6 @@ function TacticalMap() {
           ))}
         </svg>
 
-        {/* Legend */}
         <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 font-mono text-[10px] uppercase tracking-wider text-slate-400">
           <span className="flex items-center gap-2">
             <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />
@@ -413,10 +456,6 @@ function TacticalMap() {
     </div>
   );
 }
-
-/* ----------------------------------------------------------------------------
- * Metric — small live stat
- * -------------------------------------------------------------------------- */
 
 function Metric({
   value,
