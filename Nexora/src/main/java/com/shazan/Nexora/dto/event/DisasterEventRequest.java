@@ -17,5 +17,6 @@ public record DisasterEventRequest(
         List<Long> thanaIds,
         @NotNull Instant startAt,
         @NotNull Instant endAt,
-        @NotNull @Min(1) Integer requiredVolunteers
+        @NotNull @Min(1) Integer requiredVolunteers,
+        @NotNull Long ngoId
 ) {}
