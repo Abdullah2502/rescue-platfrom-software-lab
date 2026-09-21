@@ -234,4 +234,30 @@ public class DisasterEventService {
                 organizerId, organizerName, organizerType,
                 participationRepository.countByEvent(event), joined, event.getCreatedAt());
     }
+
+    // Add this to your public methods
+    @Transactional(readOnly = true)
+    public PageResponse<DisasterEventResponse> listPublicActiveEvents(int page, int size) {
+        var pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        // Fetch only OPEN and ONGOING events for the homepage
+        return PageResponse.from(eventRepository.findAllByStatusIn(
+                List.of(EventStatus.OPEN, EventStatus.ONGOING), pageable).map(this::toPublicResponse));
+    }
+
+    // Add this helper method at the bottom of the file
+    private DisasterEventResponse toPublicResponse(DisasterEvent event) {
+        String organizerName = "Nexora Platform";
+        if (event.getNgo() != null) {
+            organizerName = event.getNgo().getName();
+        } else if (event.getCreatedByAdmin() != null) {
+            organizerName = event.getCreatedByAdmin().getName();
+        }
+
+        return new DisasterEventResponse(
+                event.getId(), event.getTitle(), event.getType(), event.getSeverity(), event.getDescription(),
+                List.of(), List.of(), List.of(), // Locations omitted for homepage brevity
+                event.getStartAt(), event.getEndAt(), event.getRequiredVolunteers(), event.getStatus(),
+                null, organizerName, "PUBLIC",
+                participationRepository.countByEvent(event), false, event.getCreatedAt());
+    }
 }

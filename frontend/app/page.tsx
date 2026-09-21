@@ -1,8 +1,23 @@
+"use client";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { ArrowRight, Users, Megaphone, ShieldCheck, Activity, MapPin, CheckCircle2, Sparkles, AlertCircle } from "lucide-react";
 import { IncidentTicker } from "@/components/ui/incident-ticker";
+import { api } from "@/lib/api";
 
 export default function HomePage() {
+  // State to hold the dynamic events from the backend
+  const [liveEvents, setLiveEvents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Fetch the latest events (Ensure this endpoint allows public unauthenticated access in your backend)
+    api<{ content: any[] }>("/api/v1/events?size=3&sort=createdAt,desc")
+      .then((res) => setLiveEvents(res.content || []))
+      .catch((err) => console.error("Failed to fetch live events:", err))
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100 selection:bg-red-500 selection:text-white">
       {/* Top Glass Header */}
@@ -42,7 +57,6 @@ export default function HomePage() {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-24 pb-20 border-b border-slate-800/60">
-        {/* Background Gradient Orbs */}
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-red-600/15 rounded-full blur-[140px] pointer-events-none" />
         <div className="absolute top-1/3 left-1/4 w-[400px] h-[300px] bg-emerald-600/10 rounded-full blur-[120px] pointer-events-none" />
 
@@ -71,7 +85,6 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Operational Metrics Panel */}
           <aside className="lg:col-span-4">
             <div className="glass-card p-7 rounded-2xl space-y-6 relative overflow-hidden border border-slate-800">
               <div className="flex items-center justify-between border-b border-slate-800/80 pb-4">
@@ -99,7 +112,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Signature Element: Live Ticker */}
       <IncidentTicker />
 
       {/* Modern Workflow Section */}
@@ -168,17 +180,29 @@ export default function HomePage() {
               <div className="flex items-center justify-between border-b border-slate-800 pb-4">
                 <div>
                   <h3 className="font-display font-semibold text-slate-100">Live Incident Dispatch Monitor</h3>
-                  <p className="text-xs text-slate-400 font-mono">ID: DIS-2026-BD-8092</p>
+                  <p className="text-xs text-slate-400 font-mono">Real-time platform activity</p>
                 </div>
                 <span className="px-3 py-1 rounded-full text-xs font-mono bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse">
-                  ACTIVE EVENT
+                  ACTIVE EVENTS
                 </span>
               </div>
 
               <div className="space-y-4">
-                <InvitationRow name="Rahim Ahmed" area="Khulna · Bagerhat" status="JOINED" time="2 mins ago" />
-                <InvitationRow name="Nasrin Sultana" area="Khulna · Mongla" status="JOINED" time="5 mins ago" />
-                <InvitationRow name="Tariq Hasan" area="Khulna · Dacope" status="CERTIFIED" time="7 mins ago" />
+                {loading ? (
+                  <p className="text-xs text-slate-400 text-center py-4">Connecting to network...</p>
+                ) : liveEvents.length === 0 ? (
+                  <p className="text-xs text-slate-400 text-center py-4">No active response events at the moment.</p>
+                ) : (
+                  liveEvents.map((event) => (
+                    <EventRow 
+                      key={event.id}
+                      title={event.title} 
+                      organizer={event.organizerName || "Nexora Platform"} 
+                      status={event.status} 
+                      date={event.startAt} 
+                    />
+                  ))
+                )}
               </div>
             </div>
           </div>
@@ -225,7 +249,6 @@ function RoleCard({
   title,
   body,
   icon,
-  accent,
 }: {
   badge: string;
   title: string;
@@ -255,21 +278,24 @@ function RoleCard({
   );
 }
 
-function InvitationRow({ name, area, status, time }: { name: string; area: string; status: string; time: string }) {
-  const isAccepted = status === "ACCEPTED";
+// Replaces InvitationRow to show real events instead
+function EventRow({ title, organizer, status, date }: { title: string; organizer: string; status: string; date: string }) {
+  const isOpen = status === "OPEN" || status === "ONGOING";
   return (
     <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-900/80 border border-slate-800/80 text-xs">
-      <div className="space-y-0.5">
-        <div className="font-semibold text-slate-200">{name}</div>
-        <div className="text-slate-400 font-mono text-[11px]">{area}</div>
+      <div className="space-y-1 max-w-[65%] overflow-hidden">
+        <div className="font-semibold text-slate-200 truncate" title={title}>{title}</div>
+        <div className="text-slate-400 font-mono text-[11px] truncate">By {organizer}</div>
       </div>
       <div className="flex items-center gap-3">
-        <span className="font-mono text-[10px] text-slate-500">{time}</span>
+        <span className="font-mono text-[10px] text-slate-500 hidden sm:block">
+          {new Date(date).toLocaleDateString()}
+        </span>
         <span
           className={`font-mono text-[10px] font-bold px-2.5 py-1 rounded-md border ${
-            isAccepted
+            isOpen
               ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
-              : "bg-amber-500/20 text-amber-400 border-amber-500/30"
+              : "bg-slate-800 text-slate-400 border-slate-700"
           }`}
         >
           {status}
