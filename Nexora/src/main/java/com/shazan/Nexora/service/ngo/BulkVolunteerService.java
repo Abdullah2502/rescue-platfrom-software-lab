@@ -50,8 +50,8 @@ import java.util.UUID;
  *
  * CSV format: comment lines start with `#` and are skipped. The first
  * non-comment line is the header. Recognized columns (case-insensitive):
- *   name, email, phone, division, district, thana, skills, nid,
- *   dateOfBirth, gender.
+ * name, email, phone, division, district, thana, skills, nid,
+ * dateOfBirth, gender.
  */
 @Service
 @RequiredArgsConstructor
@@ -63,8 +63,7 @@ public class BulkVolunteerService {
     private static final String PHONE_REGEX = "^(\\+880|0)1[3-9]\\d{8}$";
     private static final String EMAIL_REGEX = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
 
-    private static final List<String> REQUIRED_COLUMNS =
-            List.of("name", "email", "phone", "division", "gender");
+    private static final List<String> REQUIRED_COLUMNS = List.of("name", "email", "phone", "division", "gender");
 
     private static final List<String> TEMPLATE_INSTRUCTIONS = List.of(
             "# Nexora bulk volunteer import — fill one row per volunteer.",
@@ -85,13 +84,11 @@ public class BulkVolunteerService {
             "#   dateOfBirth   — ISO date YYYY-MM-DD, e.g. 1995-01-15 (optional).",
             "#",
             "# Up to 5,000 rows per upload. Each successful row triggers a setup",
-            "# email with a password-setup link for the new volunteer."
-    );
+            "# email with a password-setup link for the new volunteer.");
 
     private static final List<String> TEMPLATE_HEADER = List.of(
             "name", "email", "phone", "division", "district", "thana",
-            "gender", "skills", "nid", "dateOfBirth"
-    );
+            "gender", "skills", "nid", "dateOfBirth");
 
     private static final List<String> TEMPLATE_SAMPLE_ROW = List.of(
             "Sample Volunteer",
@@ -103,8 +100,7 @@ public class BulkVolunteerService {
             "MALE",
             "first_aid, search_rescue",
             "1234567890",
-            "1995-01-15"
-    );
+            "1995-01-15");
 
     private final DivisionRepository divisionRepository;
     private final DistrictRepository districtRepository;
@@ -120,9 +116,9 @@ public class BulkVolunteerService {
      */
     public byte[] buildTemplate() {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
-             CSVWriter writer = new CSVWriter(new java.io.OutputStreamWriter(baos, StandardCharsets.UTF_8))) {
+                CSVWriter writer = new CSVWriter(new java.io.OutputStreamWriter(baos, StandardCharsets.UTF_8))) {
             for (String comment : TEMPLATE_INSTRUCTIONS) {
-                writer.writeNext(new String[]{comment}, false);
+                writer.writeNext(new String[] { comment }, false);
             }
             writer.writeNext(TEMPLATE_HEADER.toArray(new String[0]), false);
             writer.writeNext(TEMPLATE_SAMPLE_ROW.toArray(new String[0]), false);
@@ -158,8 +154,10 @@ public class BulkVolunteerService {
             String line;
             while ((line = br.readLine()) != null) {
                 String trimmed = line.trim();
-                if (trimmed.isEmpty()) continue;
-                if (trimmed.startsWith("#")) continue;
+                if (trimmed.isEmpty())
+                    continue;
+                if (trimmed.startsWith("#"))
+                    continue;
                 sb.append(line).append('\n');
             }
             filtered = sb.toString();
@@ -178,7 +176,8 @@ public class BulkVolunteerService {
 
             List<String> missing = new ArrayList<>();
             for (String req : REQUIRED_COLUMNS) {
-                if (!cols.containsKey(req)) missing.add(req);
+                if (!cols.containsKey(req))
+                    missing.add(req);
             }
             if (!missing.isEmpty()) {
                 throw ApiException.badRequest("MISSING_COLUMNS",
@@ -192,7 +191,8 @@ public class BulkVolunteerService {
             int fileLine = 1; // header consumed
             while ((row = csv.readNextSilently()) != null) {
                 fileLine++;
-                if (isBlank(row)) continue;
+                if (isBlank(row))
+                    continue;
                 total++;
                 if (total > MAX_ROWS) {
                     throw ApiException.badRequest("TOO_MANY_ROWS",
@@ -225,37 +225,44 @@ public class BulkVolunteerService {
     }
 
     /* --------------------------------------------------------------- */
-    /* Internals                                                       */
+    /* Internals */
     /* --------------------------------------------------------------- */
 
     private Map<String, Integer> indexColumns(String[] header) {
         Map<String, Integer> map = new HashMap<>();
         for (int i = 0; i < header.length; i++) {
             String h = header[i] == null ? "" : header[i].trim().toLowerCase(Locale.ROOT);
-            if (!h.isEmpty()) map.put(h, i);
+            if (!h.isEmpty())
+                map.put(h, i);
         }
         return map;
     }
 
     private AddVolunteerRequest parseRow(String[] row, Map<String, Integer> cols) {
-        String name    = cell(row, cols, "name");
-        String email   = cell(row, cols, "email");
-        String phone   = cell(row, cols, "phone");
+        String name = cell(row, cols, "name");
+        String email = cell(row, cols, "email");
+        String phone = cell(row, cols, "phone");
         String divName = cell(row, cols, "division");
         String distName = cell(row, cols, "district");
         String thanaName = cell(row, cols, "thana");
-        String gender  = cell(row, cols, "gender");
+        String gender = cell(row, cols, "gender");
         String skillsRaw = cell(row, cols, "skills");
-        String nid     = cell(row, cols, "nid");
-        String dobRaw  = cell(row, cols, "dateOfBirth");
+        String nid = cell(row, cols, "nid");
+        String dobRaw = cell(row, cols, "dateOfBirth");
 
-        if (name.isBlank()) throw new RowValidationException("name is required");
-        if (email.isBlank()) throw new RowValidationException("email is required");
-        if (!email.matches(EMAIL_REGEX)) throw new RowValidationException("invalid email: " + email);
-        if (phone.isBlank()) throw new RowValidationException("phone is required");
-        if (!phone.matches(PHONE_REGEX)) throw new RowValidationException(
-                "invalid phone (use +8801XXXXXXXXX or 01XXXXXXXXX): " + phone);
-        if (divName.isBlank()) throw new RowValidationException("division is required");
+        if (name.isBlank())
+            throw new RowValidationException("name is required");
+        if (email.isBlank())
+            throw new RowValidationException("email is required");
+        if (!email.matches(EMAIL_REGEX))
+            throw new RowValidationException("invalid email: " + email);
+        if (phone.isBlank())
+            throw new RowValidationException("phone is required");
+        if (!phone.matches(PHONE_REGEX))
+            throw new RowValidationException(
+                    "invalid phone (use +8801XXXXXXXXX or 01XXXXXXXXX): " + phone);
+        if (divName.isBlank())
+            throw new RowValidationException("division is required");
 
         Division division = divisionRepository.findByNameIgnoreCase(divName)
                 .orElseThrow(() -> new RowValidationException(
@@ -316,8 +323,7 @@ public class BulkVolunteerService {
                 division.getId(),
                 district == null ? null : district.getId(),
                 thana == null ? null : thana.getId(),
-                skills
-        );
+                skills);
     }
 
     private void insertOne(Ngo ngo, AddVolunteerRequest req) {
@@ -326,7 +332,10 @@ public class BulkVolunteerService {
             // Idempotent — silently skip duplicates, count as success.
             return;
         }
-        String tempPassword = UUID.randomUUID().toString().replace("-", "").substring(0, 16);
+
+        // Changed to default password "12345678"
+        String tempPassword = "12345678";
+
         Division division = divisionRepository.findById(req.divisionId()).orElseThrow();
         District district = req.districtId() == null ? null
                 : districtRepository.findById(req.districtId()).orElseThrow();
@@ -344,27 +353,33 @@ public class BulkVolunteerService {
                 .recruitedByNgo(ngo)
                 .build();
         volunteerRepository.save(v);
-        // Email send is @Async — won't block the row loop, parallelizes
-        // across the bulk batch for free.
-        email.sendVolunteerAddedByNgo(v, ngo, "https://nexora.bd/set-password?email=" + v.getEmail());
+
+        // Email generation skipped for now
+        // email.sendVolunteerAddedByNgo(v, ngo, "https://nexora.bd/set-password?email="
+        // + v.getEmail());
     }
 
     private static String cell(String[] row, Map<String, Integer> cols, String name) {
         Integer idx = cols.get(name);
-        if (idx == null || idx >= row.length || row[idx] == null) return "";
+        if (idx == null || idx >= row.length || row[idx] == null)
+            return "";
         return row[idx].trim();
     }
 
     private static boolean isBlank(String[] row) {
-        if (row == null || row.length == 0) return true;
+        if (row == null || row.length == 0)
+            return true;
         for (String s : row) {
-            if (s != null && !s.trim().isEmpty()) return false;
+            if (s != null && !s.trim().isEmpty())
+                return false;
         }
         return true;
     }
 
     /** Local exception so the row loop can capture per-row failures cleanly. */
     private static class RowValidationException extends RuntimeException {
-        RowValidationException(String message) { super(message); }
+        RowValidationException(String message) {
+            super(message);
+        }
     }
 }
