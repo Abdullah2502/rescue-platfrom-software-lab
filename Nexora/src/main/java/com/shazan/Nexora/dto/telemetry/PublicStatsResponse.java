@@ -6,3 +6,4 @@ public record PublicStatsResponse(
         String avgResponseTime,
         long totalVolunteers
 ) {}
+

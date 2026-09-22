@@ -31,3 +31,4 @@ public class TelemetryController {
         return ApiResponse.ok(new PublicStatsResponse(activeEvents, deployedPersonnel, "12m", totalVolunteers));
     }
 }
+
