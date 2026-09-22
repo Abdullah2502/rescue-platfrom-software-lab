@@ -4,6 +4,7 @@ import com.shazan.Nexora.domain.enums.Gender;
 import com.shazan.Nexora.domain.enums.VolunteerStatus;
 import com.shazan.Nexora.dto.location.LocationDto;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -19,5 +20,8 @@ public record VolunteerResponse(
         LocationDto district,
         LocationDto thana,
         List<String> skills,
-        VolunteerStatus status
+        VolunteerStatus status,
+        Instant createdAt,
+        String profession,
+        List<String> certificateDocuments
 ) {}

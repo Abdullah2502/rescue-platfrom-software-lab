@@ -197,6 +197,7 @@ public class NgoService {
         // serialize it after the session is closed. .size() forces load,
         // then List.copyOf() returns a plain immutable list.
         List<String> safeSkills = v.getSkills() == null ? List.of() : List.copyOf(v.getSkills());
+        List<String> safeCerts = v.getCertificateDocuments() == null ? List.of() : List.copyOf(v.getCertificateDocuments());
         return new VolunteerResponse(
                 v.getId(), v.getName(), v.getEmail(), v.getPhone(), v.getNid(),
                 v.getDateOfBirth(), v.getGender(),
@@ -209,7 +210,8 @@ public class NgoService {
                 v.getThana() == null ? null
                         : new LocationDto(v.getThana().getId(), v.getThana().getName(), v.getThana().getBnName(),
                                 v.getThana().getDistrict().getId()),
-                safeSkills, v.getStatus());
+                safeSkills, v.getStatus(), v.getCreatedAt(),
+                v.getProfession(), safeCerts);
     }
 
     public List<Long> getNgoDivisionIds() {

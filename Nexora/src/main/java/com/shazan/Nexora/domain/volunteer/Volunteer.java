@@ -60,12 +60,22 @@ public class Volunteer extends BaseEntity {
     @JoinColumn(name = "thana_id")
     private Thana thana;
 
+    @Column(length = 100)
+    private String profession;
+
     @ElementCollection
     @CollectionTable(name = "volunteer_skills",
             joinColumns = @JoinColumn(name = "volunteer_id"))
     @Column(name = "skill", length = 60)
     @Builder.Default
     private List<String> skills = new ArrayList<>();
+
+    @ElementCollection
+    @CollectionTable(name = "volunteer_certificate_documents",
+            joinColumns = @JoinColumn(name = "volunteer_id"))
+    @Column(name = "document_url", length = 1000)
+    @Builder.Default
+    private List<String> certificateDocuments = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

@@ -109,10 +109,24 @@ public class DisasterEventService {
     @Transactional
     public DisasterEventResponse createForVolunteer(DisasterEventRequest req) {
         Volunteer volunteer = requireVolunteer();
-        DisasterEvent event = buildEvent(req, null, null, volunteer);
+        Ngo targetNgo = null;
+        if (req.ngoId() != null) {
+            targetNgo = ngoRepository.findById(req.ngoId())
+                    .orElseThrow(() -> ApiException.notFound("NGO_NOT_FOUND", "Selected NGO not found"));
+        }
+        DisasterEvent event = buildEvent(req, targetNgo, null, volunteer);
+        // Volunteers cannot directly publish events; they can only request them for review
+        event.setStatus(EventStatus.PENDING_REVIEW);
         event = eventRepository.save(event);
         notificationService.notifyEventCreated(event);
         return toResponse(event);
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<DisasterEventResponse> listMyEventRequests(int page, int size) {
+        Volunteer volunteer = requireVolunteer();
+        var pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        return PageResponse.from(eventRepository.findAllByCreatedByVolunteer(volunteer, pageable).map(this::toResponse));
     }
 
     @Transactional
@@ -148,14 +162,22 @@ public class DisasterEventService {
     public DisasterEventResponse changeStatus(Long eventId, EventStatus newStatus) {
         var current = CurrentUser.require();
         DisasterEvent event = loadEvent(eventId);
-        boolean allowed = Role.ROLE_SUPER_ADMIN.name().equals(current.role())
-                || (Role.ROLE_NGO_ADMIN.name().equals(current.role())
-                        && event.getNgo() != null && event.getNgo().getId().equals(current.ngoId()))
-                || (Role.ROLE_VOLUNTEER.name().equals(current.role())
-                        && event.getCreatedByVolunteer() != null
-                        && event.getCreatedByVolunteer().getId().equals(current.id()));
+        boolean isSuperAdmin = Role.ROLE_SUPER_ADMIN.name().equals(current.role());
+        boolean isAssignedNgo = Role.ROLE_NGO_ADMIN.name().equals(current.role())
+                && event.getNgo() != null && event.getNgo().getId().equals(current.ngoId());
+        boolean isCreatorVolunteer = Role.ROLE_VOLUNTEER.name().equals(current.role())
+                && event.getCreatedByVolunteer() != null
+                && event.getCreatedByVolunteer().getId().equals(current.id());
+
+        // Volunteers cannot approve or publish their own event requests
+        if (isCreatorVolunteer && (newStatus == EventStatus.OPEN || newStatus == EventStatus.ONGOING)) {
+            throw ApiException.forbidden("CANNOT_APPROVE_OWN_EVENT",
+                    "Volunteers cannot approve or publish their own event requests. Review by an admin or assigned NGO is required.");
+        }
+
+        boolean allowed = isSuperAdmin || isAssignedNgo || isCreatorVolunteer;
         if (!allowed) {
-            throw ApiException.forbidden("NOT_EVENT_OWNER", "Only the event creator or a super admin can update it");
+            throw ApiException.forbidden("NOT_EVENT_OWNER", "Only the assigned NGO or a super admin can review and update this event");
         }
         event.setStatus(newStatus);
         eventRepository.save(event);

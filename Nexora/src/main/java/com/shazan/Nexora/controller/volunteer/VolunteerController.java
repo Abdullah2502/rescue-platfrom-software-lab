@@ -37,4 +37,18 @@ public class VolunteerController {
         return ApiResponse.ok(certificateService.listForCurrentVolunteer());
     }
 
+    @GetMapping("/ngos")
+    public ApiResponse<com.shazan.Nexora.common.PageResponse<com.shazan.Nexora.dto.ngo.NgoResponse>> listNgos(
+            @RequestParam(required = false) Long divisionId,
+            @RequestParam(required = false) Long districtId,
+            @RequestParam(required = false) String q,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.listActiveNgos(divisionId, districtId, q, page, size));
+    }
+
+    @GetMapping("/ngos/{id}")
+    public ApiResponse<com.shazan.Nexora.dto.ngo.NgoResponse> getNgo(@PathVariable Long id) {
+        return ApiResponse.ok(service.getNgoDetails(id));
+    }
 }

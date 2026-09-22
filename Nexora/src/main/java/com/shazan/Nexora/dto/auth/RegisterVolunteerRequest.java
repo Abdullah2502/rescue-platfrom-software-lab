@@ -4,6 +4,7 @@ import com.shazan.Nexora.domain.enums.Gender;
 import jakarta.validation.constraints.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public record RegisterVolunteerRequest(
         @NotBlank @Size(max = 100) String name,
@@ -16,5 +17,7 @@ public record RegisterVolunteerRequest(
         Long divisionId,
         Long districtId,
         Long thanaId,
-        String skills
+        String skills,
+        String profession,
+        List<String> certificateDocuments
 ) {}

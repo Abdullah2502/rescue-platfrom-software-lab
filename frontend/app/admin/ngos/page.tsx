@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Activity, CheckCircle2, Trash2, XCircle } from "lucide-react";
+import { Activity, Building2, Calendar, CheckCircle2, ExternalLink, Eye, Globe, Mail, MapPin, Phone, ShieldCheck, Trash2, X, XCircle } from "lucide-react";
 import { api } from "@/lib/api";
 import { Button, Input, Label, Textarea } from "@/components/ui/input";
 import { NgoStatusBadge } from "@/components/ui/badge";
@@ -15,6 +15,7 @@ export default function AdminNgosPage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<number | null>(null);
+  const [viewing, setViewing] = useState<NgoResponse | null>(null);
   const [rejecting, setRejecting] = useState<NgoResponse | null>(null);
   const [reason, setReason] = useState("");
   const [deleting, setDeleting] = useState<NgoResponse | null>(null);
@@ -168,6 +169,14 @@ export default function AdminNgosPage() {
                   <td><NgoStatusBadge status={n.status} /></td>
                   <td className="text-xs font-mono text-mist">{formatDateTime(n.createdAt)}</td>
                   <td className="space-x-1 text-right">
+                    <Button
+                      variant="secondary"
+                      onClick={() => setViewing(n)}
+                      size="sm"
+                      title="View Details"
+                    >
+                      <Eye className="h-4 w-4" /> Details
+                    </Button>
                     {n.status === "PENDING" && (
                       <>
                         <Button onClick={() => approve(n.id)} disabled={busyId === n.id} size="sm">
@@ -194,6 +203,189 @@ export default function AdminNgosPage() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* NGO Details & Verification Modal */}
+      {viewing && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-ink/60 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="bg-paper border border-ink-300 rounded shadow-panel w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-ink-300 flex items-center justify-between bg-surface/50">
+              <div className="flex items-center gap-3">
+                {viewing.logoUrl ? (
+                  <img
+                    src={viewing.logoUrl}
+                    alt={viewing.name}
+                    className="h-10 w-10 object-contain rounded border border-ink-300 bg-paper p-0.5 shrink-0"
+                  />
+                ) : (
+                  <div className="h-10 w-10 rounded border border-ink-300 bg-surface flex items-center justify-center shrink-0">
+                    <Building2 className="h-5 w-5 text-mist" />
+                  </div>
+                )}
+                <div>
+                  <div className="eyebrow flex items-center gap-2">
+                    <ShieldCheck className="h-3.5 w-3.5 text-red-500" />
+                    <span>NGO Credential Verification</span>
+                    <span className="font-mono text-mist">#{viewing.id}</span>
+                  </div>
+                  <h3 className="font-display text-xl text-ink font-bold mt-0.5">{viewing.name}</h3>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <NgoStatusBadge status={viewing.status} />
+                <button
+                  onClick={() => setViewing(null)}
+                  className="text-mist hover:text-ink transition p-1 rounded hover:bg-paper-200"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-5 overflow-y-auto flex-1 text-sm">
+              {/* Registration & Identity */}
+              <div className="p-4 rounded border border-ink-300 bg-surface/40 space-y-3">
+                <div className="text-xs font-mono uppercase tracking-wider text-mist flex items-center gap-1.5">
+                  <ShieldCheck className="h-3.5 w-3.5 text-red-400" /> Official Registration & Credentials
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-xs text-mist block font-mono">Government Registration No.</span>
+                    <div className="font-mono text-base font-semibold text-ink mt-0.5">
+                      {viewing.registrationNo}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-xs text-mist block font-mono">Official Website</span>
+                    <div className="mt-0.5">
+                      {viewing.website ? (
+                        <a
+                          href={viewing.website.startsWith("http") ? viewing.website : `https://${viewing.website}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs text-blue-400 hover:underline"
+                        >
+                          <Globe className="h-3.5 w-3.5" />
+                          <span className="truncate max-w-[200px]">{viewing.website}</span>
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      ) : (
+                        <span className="text-xs text-mist italic">Not provided</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Contact Information */}
+              <div className="p-4 rounded border border-ink-300 bg-surface/40 space-y-3">
+                <div className="text-xs font-mono uppercase tracking-wider text-mist flex items-center gap-1.5">
+                  <Phone className="h-3.5 w-3.5" /> Official Communications
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="flex items-center gap-2 text-ink">
+                    <Mail className="h-4 w-4 text-mist shrink-0" />
+                    <a href={`mailto:${viewing.email}`} className="text-xs hover:underline truncate">
+                      {viewing.email}
+                    </a>
+                  </div>
+                  <div className="flex items-center gap-2 text-ink">
+                    <Phone className="h-4 w-4 text-mist shrink-0" />
+                    <a href={`tel:${viewing.phone}`} className="text-xs font-mono hover:underline">
+                      {viewing.phone}
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Territorial Hierarchy / Headquarters */}
+              <div className="p-4 rounded border border-ink-300 bg-surface/40 space-y-3">
+                <div className="text-xs font-mono uppercase tracking-wider text-mist flex items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5 text-emerald-400" /> Operational Base & Jurisdiction
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <span className="text-[11px] text-mist block">Division</span>
+                    <span className="font-medium text-ink">
+                      {viewing.division?.name || "—"}
+                    </span>
+                    {viewing.division?.bnName && (
+                      <span className="text-[11px] text-mist block">{viewing.division.bnName}</span>
+                    )}
+                  </div>
+                  <div>
+                    <span className="text-[11px] text-mist block">District</span>
+                    <span className="font-medium text-ink">
+                      {viewing.district?.name || "—"}
+                    </span>
+                    {viewing.district?.bnName && (
+                      <span className="text-[11px] text-mist block">{viewing.district.bnName}</span>
+                    )}
+                  </div>
+                  <div>
+                    <span className="text-[11px] text-mist block">Thana / Upazila</span>
+                    <span className="font-medium text-ink">
+                      {viewing.thana?.name || "—"}
+                    </span>
+                    {viewing.thana?.bnName && (
+                      <span className="text-[11px] text-mist block">{viewing.thana.bnName}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Rejection notice if previously rejected */}
+              {viewing.status === "REJECTED" && viewing.rejectionReason && (
+                <div className="p-3.5 rounded border border-red-500/30 bg-red-950/20 text-xs text-red-300 space-y-1">
+                  <span className="font-bold block text-red-400 uppercase tracking-wider font-mono">Previous Rejection Reason:</span>
+                  <p>{viewing.rejectionReason}</p>
+                </div>
+              )}
+
+              {/* Timestamps */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-mist font-mono pt-1">
+                <div>Registration applied: {formatDateTime(viewing.createdAt)}</div>
+                {viewing.approvedAt && <div>Approved on: {formatDateTime(viewing.approvedAt)}</div>}
+              </div>
+            </div>
+
+            {/* Modal Footer / Actions */}
+            <div className="px-6 py-4 border-t border-ink-300 bg-surface/50 flex items-center justify-between">
+              <Button variant="ghost" onClick={() => setViewing(null)}>
+                Close
+              </Button>
+              <div className="flex items-center gap-2">
+                {viewing.status === "PENDING" && (
+                  <>
+                    <Button
+                      variant="secondary"
+                      onClick={() => {
+                        const target = viewing;
+                        setViewing(null);
+                        setRejecting(target);
+                      }}
+                      disabled={busyId === viewing.id}
+                    >
+                      <XCircle className="h-4 w-4" /> Reject Application
+                    </Button>
+                    <Button
+                      onClick={async () => {
+                        await approve(viewing.id);
+                        setViewing(null);
+                      }}
+                      disabled={busyId === viewing.id}
+                      className="bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-600"
+                    >
+                      <CheckCircle2 className="h-4 w-4" /> Approve NGO
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

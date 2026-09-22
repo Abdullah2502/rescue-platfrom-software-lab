@@ -46,6 +46,14 @@ public class DisasterEventController {
         return ApiResponse.ok(service.createForVolunteer(req));
     }
 
+    @GetMapping("/volunteer/event-requests")
+    @PreAuthorize("hasRole('VOLUNTEER')")
+    public ApiResponse<PageResponse<DisasterEventResponse>> listMyEventRequests(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.listMyEventRequests(page, size));
+    }
+
     @PostMapping("/admin/events")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ApiResponse<DisasterEventResponse> createForAdmin(@Valid @RequestBody DisasterEventRequest req) {

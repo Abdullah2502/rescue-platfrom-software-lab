@@ -70,6 +70,8 @@ public class AuthService {
                 .phone(req.phone()).nid(req.nid())
                 .dateOfBirth(req.dateOfBirth()).gender(req.gender())
                 .division(division).district(district).thana(thana)
+                .profession(req.profession())
+                .certificateDocuments(req.certificateDocuments() == null ? new java.util.ArrayList<>() : new java.util.ArrayList<>(req.certificateDocuments()))
                 .skills(new java.util.ArrayList<>(skills))
                 .status(com.shazan.Nexora.domain.enums.VolunteerStatus.PENDING_VERIFICATION)
                 .build();

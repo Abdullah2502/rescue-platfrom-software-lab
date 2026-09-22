@@ -3,21 +3,23 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth, dashboardPath } from "@/lib/auth";
-import { api } from "@/lib/api";
+import { api, apiUpload } from "@/lib/api";
 import { Button, Input, Label, HelpText } from "@/components/ui/input";
 import { LocationCascade } from "@/components/ui/location-cascade";
 import { ErrorState } from "@/components/ui/page";
-import type { AuthResponse, Gender } from "@/lib/types";
-import { Activity, ArrowRight, Radio, UserPlus } from "lucide-react";
+import type { AuthResponse, Gender, UploadedFileResponse } from "@/lib/types";
+import { Activity, ArrowRight, Briefcase, FileCheck, FileText, Radio, Trash2, UploadCloud, UserPlus } from "lucide-react";
 
 export default function RegisterVolunteerPage() {
   const router = useRouter();
   const setSession = useAuth((s) => s.setSession);
   const [form, setForm] = useState({
     name: "", email: "", password: "", phone: "", nid: "", gender: "MALE" as Gender,
+    profession: "",
     skills: "",
   });
   const [location, setLocation] = useState<{ divisionId?: number; districtId?: number; thanaId?: number }>({});
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [pendingConfirmation, setPendingConfirmation] = useState<{ name: string; email: string } | null>(null);
@@ -26,11 +28,31 @@ export default function RegisterVolunteerPage() {
     setForm((p) => ({ ...p, [k]: v }));
   }
 
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    if (!e.target.files) return;
+    const newFiles = Array.from(e.target.files);
+    setSelectedFiles((prev) => [...prev, ...newFiles]);
+    e.target.value = "";
+  }
+
+  function removeFile(index: number) {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setLoading(true);
     try {
+      // 1. Upload any selected certificates first
+      const uploadedUrls: string[] = [];
+      for (const file of selectedFiles) {
+        const fd = new FormData();
+        fd.append("file", file);
+        const res = await apiUpload<UploadedFileResponse>("/api/v1/uploads/certificate", fd);
+        uploadedUrls.push(res.url);
+      }
+
       // Backend expects `skills` as a comma-separated string, not an array.
       // Trim, drop empties, and re-join so the server gets a clean value.
       const skillsClean = form.skills
@@ -50,6 +72,8 @@ export default function RegisterVolunteerPage() {
         districtId: location.districtId ?? null,
         thanaId: location.thanaId ?? null,
         skills: skillsClean,
+        profession: form.profession.trim() || null,
+        certificateDocuments: uploadedUrls,
       };
       const data = await api<AuthResponse>("/api/v1/auth/register/volunteer", {
         method: "POST",
@@ -225,6 +249,16 @@ export default function RegisterVolunteerPage() {
                   <option value="OTHER">Other</option>
                 </select>
               </div>
+              <div className="md:col-span-2">
+                <Label>Profession</Label>
+                <Input
+                  value={form.profession}
+                  onChange={(e) => up("profession", e.target.value)}
+                  placeholder="e.g. Medical Doctor, Paramedic, Civil Engineer, Student, Teacher"
+                  className="h-11 rounded-md border-slate-700/80 bg-slate-900/60 px-4 text-sm text-slate-100 placeholder:text-slate-500 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                />
+                <HelpText>Your current occupation or field of study. Helps match you to relevant crisis operations.</HelpText>
+              </div>
             </div>
           </section>
 
@@ -266,6 +300,76 @@ export default function RegisterVolunteerPage() {
                 className="h-11 rounded-md border-slate-700/80 bg-slate-900/60 px-4 text-sm text-slate-100 placeholder:text-slate-500 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
               />
               <HelpText>Comma-separated. NGOs search by skill when events open.</HelpText>
+            </div>
+          </section>
+
+          {/* Section 04: Certificates & Verification Documents */}
+          <section className="relative rounded-xl border border-slate-800/80 bg-slate-900/40 p-6 backdrop-blur-sm sm:p-8">
+            <div className="mb-6 flex items-center justify-between border-b border-slate-800/80 pb-4">
+              <div className="flex items-center gap-3">
+                <span className="font-mono text-xs font-bold text-emerald-400">04</span>
+                <span className="font-display text-lg font-bold text-slate-100">Certificates & Verification Documents</span>
+              </div>
+              <span className="font-mono text-[10px] uppercase tracking-wider text-slate-500">
+                Credentials
+              </span>
+            </div>
+
+            <div className="space-y-4">
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Upload your certifications, training completion certificates, medical licenses, or first-aid credentials. You can select multiple documents (PDF, PNG, JPG, WEBP).
+              </p>
+
+              <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-700/80 bg-slate-900/30 p-6 text-center hover:border-emerald-500/50 transition">
+                <UploadCloud className="h-8 w-8 text-emerald-400 mb-2" />
+                <label className="cursor-pointer">
+                  <span className="inline-flex items-center gap-2 rounded-md bg-emerald-600/20 px-3.5 py-1.5 text-xs font-semibold text-emerald-300 border border-emerald-500/30 hover:bg-emerald-600/30 transition">
+                    Browse & select certificate documents
+                  </span>
+                  <input
+                    type="file"
+                    multiple
+                    accept=".pdf,.png,.jpg,.jpeg,.webp"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                </label>
+                <span className="mt-2 text-[11px] text-slate-500 font-mono">
+                  Supported formats: PDF, PNG, JPG, JPEG, WEBP (Max 10MB per file)
+                </span>
+              </div>
+
+              {selectedFiles.length > 0 && (
+                <div className="space-y-2 mt-4">
+                  <div className="text-xs font-mono uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                    <FileCheck className="h-3.5 w-3.5" /> Selected documents ({selectedFiles.length})
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {selectedFiles.map((file, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between gap-2 p-2.5 rounded border border-slate-800 bg-slate-900/80 text-xs"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <FileText className="h-4 w-4 text-emerald-400 shrink-0" />
+                          <div className="truncate">
+                            <p className="text-slate-200 font-medium truncate">{file.name}</p>
+                            <p className="text-[10px] text-slate-500 font-mono">{(file.size / 1024).toFixed(1)} KB</p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeFile(idx)}
+                          className="text-slate-500 hover:text-red-400 p-1 transition"
+                          title="Remove document"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </section>
 

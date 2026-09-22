@@ -12,5 +12,7 @@ public record UpdateVolunteerProfileRequest(
         List<String> skills,
         Long divisionId,
         Long districtId,
-        Long thanaId
+        Long thanaId,
+        String profession,
+        List<String> certificateDocuments
 ) {}

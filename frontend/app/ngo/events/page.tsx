@@ -84,6 +84,12 @@ export default function NgoEventsPage() {
                     <Link href={`/ngo/events/${e.id}`}>
                       <Button variant="secondary" size="sm">Manage</Button>
                     </Link>
+                    {e.status === "PENDING_REVIEW" && (
+                      <>
+                        <Button variant="primary" size="sm" onClick={() => changeStatus(e.id, "OPEN")}>Approve</Button>
+                        <Button variant="ghost" size="sm" onClick={() => changeStatus(e.id, "REJECTED")}>Reject</Button>
+                      </>
+                    )}
                     {e.status === "OPEN"    && <Button variant="ghost" size="sm" onClick={() => changeStatus(e.id, "ONGOING")}>Start</Button>}
                     {e.status === "ONGOING" && <Button variant="ghost" size="sm" onClick={() => changeStatus(e.id, "CLOSED")}>Finish</Button>}
                   </td>

@@ -1,12 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Activity, CheckCircle2, Search, Trash2, XCircle } from "lucide-react";
+import { Activity, Award, Briefcase, Calendar, CheckCircle2, CreditCard, ExternalLink, Eye, FileCheck, FileText, Mail, MapPin, Phone, Search, ShieldCheck, Trash2, User, X, XCircle } from "lucide-react";
 import { api } from "@/lib/api";
 import { Button, Input, Label, Textarea } from "@/components/ui/input";
 import { VolunteerStatusBadge } from "@/components/ui/badge";
 import { PageHeader, EmptyState } from "@/components/ui/page";
 import { LocationCascade } from "@/components/ui/location-cascade";
 import { toast } from "@/components/ui/toast";
+import { formatDateTime } from "@/lib/utils";
 import type { PageResp, VolunteerResponse, VolunteerStatus } from "@/lib/types";
 
 type Filter = VolunteerStatus | "ALL";
@@ -26,6 +27,7 @@ export default function AdminVolunteersPage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<number | null>(null);
+  const [viewing, setViewing] = useState<VolunteerResponse | null>(null);
   const [rejecting, setRejecting] = useState<VolunteerResponse | null>(null);
   const [reason, setReason] = useState("");
   const [deleting, setDeleting] = useState<VolunteerResponse | null>(null);
@@ -204,7 +206,12 @@ export default function AdminVolunteersPage() {
             <tbody>
               {data.content.map((v) => (
                 <tr key={v.id}>
-                  <td className="font-medium text-ink">{v.name}</td>
+                  <td className="font-medium text-ink">
+                    <div>{v.name}</div>
+                    {v.profession && (
+                      <span className="text-[11px] text-mist font-normal block">{v.profession}</span>
+                    )}
+                  </td>
                   <td className="text-xs">{v.email}</td>
                   <td className="text-xs font-mono">{v.phone}</td>
                   <td className="text-xs">
@@ -217,6 +224,14 @@ export default function AdminVolunteersPage() {
                   </td>
                   <td><VolunteerStatusBadge status={v.status} /></td>
                   <td className="space-x-1 text-right">
+                    <Button
+                      variant="secondary"
+                      onClick={() => setViewing(v)}
+                      size="sm"
+                      title="View Details"
+                    >
+                      <Eye className="h-4 w-4" /> Details
+                    </Button>
                     {v.status === "PENDING_VERIFICATION" && (
                       <>
                         <Button onClick={() => approve(v.id)} disabled={busyId === v.id} size="sm">
@@ -252,6 +267,259 @@ export default function AdminVolunteersPage() {
           <div className="px-4 py-3 text-xs text-mist border-t border-ink-300 flex items-center justify-between">
             <span>{data.totalElements} volunteer{data.totalElements !== 1 && "s"}</span>
             <span>Page {data.page + 1} of {data.totalPages}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Volunteer Details & Verification Modal */}
+      {viewing && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-ink/60 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="bg-paper border border-ink-300 rounded shadow-panel w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-ink-300 flex items-center justify-between bg-surface/50">
+              <div>
+                <div className="eyebrow flex items-center gap-2">
+                  <ShieldCheck className="h-3.5 w-3.5 text-red-500" />
+                  <span>Volunteer Verification Details</span>
+                  <span className="font-mono text-mist">#{viewing.id}</span>
+                </div>
+                <h3 className="font-display text-xl text-ink font-bold mt-0.5">{viewing.name}</h3>
+              </div>
+              <div className="flex items-center gap-3">
+                <VolunteerStatusBadge status={viewing.status} />
+                <button
+                  onClick={() => setViewing(null)}
+                  className="text-mist hover:text-ink transition p-1 rounded hover:bg-paper-200"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-5 overflow-y-auto flex-1 text-sm">
+              {/* Identity & Basic Credentials */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-3.5 rounded border border-ink-300 bg-surface/40 space-y-1">
+                  <div className="text-xs text-mist flex items-center gap-1.5 font-mono uppercase tracking-wider">
+                    <CreditCard className="h-3.5 w-3.5 text-red-400" /> National ID (NID)
+                  </div>
+                  <div className="font-mono text-base font-semibold text-ink">
+                    {viewing.nid ? viewing.nid : <span className="text-mist font-normal italic">Not provided</span>}
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded border border-ink-300 bg-surface/40 space-y-1">
+                  <div className="text-xs text-mist flex items-center gap-1.5 font-mono uppercase tracking-wider">
+                    <Briefcase className="h-3.5 w-3.5 text-amber-400" /> Profession / Occupation
+                  </div>
+                  <div className="font-medium text-ink">
+                    {viewing.profession ? viewing.profession : <span className="text-mist font-normal italic">Not specified</span>}
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded border border-ink-300 bg-surface/40 space-y-1">
+                  <div className="text-xs text-mist flex items-center gap-1.5 font-mono uppercase tracking-wider">
+                    <Calendar className="h-3.5 w-3.5 text-blue-400" /> Date of Birth & Gender
+                  </div>
+                  <div className="font-medium text-ink">
+                    {viewing.dateOfBirth || "N/A"}
+                    <span className="ml-2 text-xs px-2 py-0.5 rounded bg-ink-200 text-ink font-mono uppercase">
+                      {viewing.gender}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded border border-ink-300 bg-surface/40 space-y-1">
+                  <div className="text-xs text-mist flex items-center gap-1.5 font-mono uppercase tracking-wider">
+                    <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" /> Registered On
+                  </div>
+                  <div className="font-mono text-xs text-ink pt-0.5">
+                    {viewing.createdAt ? formatDateTime(viewing.createdAt) : "N/A"}
+                  </div>
+                </div>
+              </div>
+
+              {/* Contact Information */}
+              <div className="p-4 rounded border border-ink-300 bg-surface/40 space-y-3">
+                <div className="text-xs font-mono uppercase tracking-wider text-mist flex items-center gap-1.5">
+                  <User className="h-3.5 w-3.5" /> Contact Details
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="flex items-center gap-2 text-ink">
+                    <Mail className="h-4 w-4 text-mist shrink-0" />
+                    <a href={`mailto:${viewing.email}`} className="text-xs hover:underline truncate">
+                      {viewing.email}
+                    </a>
+                  </div>
+                  <div className="flex items-center gap-2 text-ink">
+                    <Phone className="h-4 w-4 text-mist shrink-0" />
+                    <a href={`tel:${viewing.phone}`} className="text-xs font-mono hover:underline">
+                      {viewing.phone}
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Territorial Hierarchy / Area */}
+              <div className="p-4 rounded border border-ink-300 bg-surface/40 space-y-3">
+                <div className="text-xs font-mono uppercase tracking-wider text-mist flex items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5 text-emerald-400" /> Registered Deployment Area
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <span className="text-[11px] text-mist block">Division</span>
+                    <span className="font-medium text-ink">
+                      {viewing.division?.name || "—"}
+                    </span>
+                    {viewing.division?.bnName && (
+                      <span className="text-[11px] text-mist block">{viewing.division.bnName}</span>
+                    )}
+                  </div>
+                  <div>
+                    <span className="text-[11px] text-mist block">District</span>
+                    <span className="font-medium text-ink">
+                      {viewing.district?.name || "—"}
+                    </span>
+                    {viewing.district?.bnName && (
+                      <span className="text-[11px] text-mist block">{viewing.district.bnName}</span>
+                    )}
+                  </div>
+                  <div>
+                    <span className="text-[11px] text-mist block">Thana / Upazila</span>
+                    <span className="font-medium text-ink">
+                      {viewing.thana?.name || "—"}
+                    </span>
+                    {viewing.thana?.bnName && (
+                      <span className="text-[11px] text-mist block">{viewing.thana.bnName}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Skills */}
+              <div className="p-4 rounded border border-ink-300 bg-surface/40 space-y-2">
+                <div className="text-xs font-mono uppercase tracking-wider text-mist flex items-center gap-1.5">
+                  <Award className="h-3.5 w-3.5 text-amber-400" /> Skills & Specializations
+                </div>
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {viewing.skills && viewing.skills.length > 0 ? (
+                    viewing.skills.map((s) => (
+                      <span key={s} className="nx-badge nx-badge-ink px-2.5 py-1 text-xs">
+                        {s}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-xs text-mist italic">No specific skills declared</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Submitted Certificates & Verification Documents */}
+              <div className="p-4 rounded border border-ink-300 bg-surface/40 space-y-3">
+                <div className="text-xs font-mono uppercase tracking-wider text-mist flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <FileCheck className="h-3.5 w-3.5 text-blue-400" /> Submitted Certificates & Documents
+                  </span>
+                  <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-ink-200 text-ink">
+                    {viewing.certificateDocuments?.length || 0} attached
+                  </span>
+                </div>
+
+                {viewing.certificateDocuments && viewing.certificateDocuments.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    {viewing.certificateDocuments.map((docUrl, idx) => {
+                      const rawName = docUrl.split("/").pop() || `Certificate-${idx + 1}`;
+                      const cleanName = rawName.includes("_") ? rawName.substring(rawName.indexOf("_") + 1) : rawName;
+                      const isImage = /\.(png|jpe?g|webp|gif)$/i.test(docUrl);
+                      const isPdf = /\.pdf$/i.test(docUrl);
+                      const fullUrl = docUrl.startsWith("http")
+                        ? docUrl
+                        : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}${docUrl}`;
+
+                      return (
+                        <div
+                          key={idx}
+                          className="flex flex-col justify-between p-3 rounded border border-ink-300 bg-paper space-y-2 hover:border-emerald-500/40 transition"
+                        >
+                          <div className="flex items-start gap-2.5">
+                            <div className="p-2 rounded bg-surface border border-ink-300 text-emerald-400 shrink-0">
+                              {isPdf ? <FileText className="h-5 w-5 text-red-400" /> : <FileCheck className="h-5 w-5 text-blue-400" />}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-medium text-ink text-xs truncate" title={cleanName}>
+                                {cleanName}
+                              </p>
+                              <span className="text-[10px] font-mono text-mist uppercase">
+                                {isPdf ? "PDF Document" : isImage ? "Image Document" : "Attachment"}
+                              </span>
+                            </div>
+                          </div>
+
+                          {isImage && (
+                            <div className="relative h-24 w-full rounded border border-ink-300 overflow-hidden bg-surface flex items-center justify-center">
+                              <img
+                                src={fullUrl}
+                                alt={cleanName}
+                                className="h-full w-full object-contain p-1"
+                              />
+                            </div>
+                          )}
+
+                          <a
+                            href={fullUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center gap-1.5 w-full py-1.5 px-3 rounded border border-ink-300 bg-surface hover:bg-paper-200 text-ink text-xs font-medium transition"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5 text-mist" />
+                            <span>View / Download Document</span>
+                          </a>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-xs text-mist italic py-1">
+                    No certificate documents submitted by this volunteer.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Footer / Actions */}
+            <div className="px-6 py-4 border-t border-ink-300 bg-surface/50 flex items-center justify-between">
+              <Button variant="ghost" onClick={() => setViewing(null)}>
+                Close
+              </Button>
+              <div className="flex items-center gap-2">
+                {viewing.status === "PENDING_VERIFICATION" && (
+                  <>
+                    <Button
+                      variant="secondary"
+                      onClick={() => {
+                        const target = viewing;
+                        setViewing(null);
+                        setRejecting(target);
+                      }}
+                      disabled={busyId === viewing.id}
+                    >
+                      <XCircle className="h-4 w-4" /> Reject Application
+                    </Button>
+                    <Button
+                      onClick={async () => {
+                        await approve(viewing.id);
+                        setViewing(null);
+                      }}
+                      disabled={busyId === viewing.id}
+                      className="bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-600"
+                    >
+                      <CheckCircle2 className="h-4 w-4" /> Approve Volunteer
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}

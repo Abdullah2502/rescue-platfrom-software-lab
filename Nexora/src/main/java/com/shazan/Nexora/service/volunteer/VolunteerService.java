@@ -1,16 +1,23 @@
 package com.shazan.Nexora.service.volunteer;
 
+import com.shazan.Nexora.common.PageResponse;
 import com.shazan.Nexora.common.exception.ApiException;
+import com.shazan.Nexora.domain.enums.NgoStatus;
 import com.shazan.Nexora.domain.enums.Role;
+import com.shazan.Nexora.domain.ngo.Ngo;
 import com.shazan.Nexora.domain.volunteer.Volunteer;
 import com.shazan.Nexora.dto.location.LocationDto;
+import com.shazan.Nexora.dto.ngo.NgoResponse;
 import com.shazan.Nexora.dto.volunteer.VolunteerResponse;
 import com.shazan.Nexora.repository.location.DistrictRepository;
 import com.shazan.Nexora.repository.location.DivisionRepository;
 import com.shazan.Nexora.repository.location.ThanaRepository;
+import com.shazan.Nexora.repository.ngo.NgoRepository;
 import com.shazan.Nexora.repository.volunteer.VolunteerRepository;
 import com.shazan.Nexora.security.CurrentUser;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +32,7 @@ public class VolunteerService {
     private final DivisionRepository divisionRepository;
     private final DistrictRepository districtRepository;
     private final ThanaRepository thanaRepository;
+    private final NgoRepository ngoRepository;
 
     @Transactional(readOnly = true)
     public VolunteerResponse me() {
@@ -38,6 +46,8 @@ public class VolunteerService {
         if (req.nid() != null) v.setNid(req.nid());
         if (req.dateOfBirth() != null) v.setDateOfBirth(req.dateOfBirth());
         if (req.skills() != null) v.setSkills(new ArrayList<>(req.skills()));
+        if (req.profession() != null) v.setProfession(req.profession());
+        if (req.certificateDocuments() != null) v.setCertificateDocuments(new ArrayList<>(req.certificateDocuments()));
         if (req.divisionId() != null) {
             v.setDivision(divisionRepository.findById(req.divisionId())
                     .orElseThrow(() -> ApiException.badRequest("DIVISION_NOT_FOUND", "Invalid division")));
@@ -64,8 +74,9 @@ public class VolunteerService {
     }
 
     private VolunteerResponse toResponse(Volunteer v) {
-        // Copy skills into a new ArrayList while the transaction session is still active
+        // Copy collections into new ArrayLists while the transaction session is still active
         List<String> safeSkills = v.getSkills() == null ? List.of() : new ArrayList<>(v.getSkills());
+        List<String> safeCerts = v.getCertificateDocuments() == null ? List.of() : new ArrayList<>(v.getCertificateDocuments());
 
         return new VolunteerResponse(
                 v.getId(), 
@@ -94,7 +105,61 @@ public class VolunteerService {
                         v.getThana().getDistrict() != null ? v.getThana().getDistrict().getId() : null
                 ),
                 safeSkills, 
-                v.getStatus()
+                v.getStatus(),
+                v.getCreatedAt(),
+                v.getProfession(),
+                safeCerts
         );
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<NgoResponse> listActiveNgos(Long divisionId, Long districtId, String q, int page, int size) {
+        requireVolunteer();
+        var pageable = PageRequest.of(page, size, Sort.by("name").ascending());
+        var stream = ngoRepository.findAllByStatus(NgoStatus.APPROVED).stream();
+        if (divisionId != null) {
+            stream = stream.filter(n -> n.getDivision() != null && n.getDivision().getId().equals(divisionId));
+        }
+        if (districtId != null) {
+            stream = stream.filter(n -> n.getDistrict() != null && n.getDistrict().getId().equals(districtId));
+        }
+        if (q != null && !q.isBlank()) {
+            String lower = q.trim().toLowerCase();
+            stream = stream.filter(n -> (n.getName() != null && n.getName().toLowerCase().contains(lower))
+                    || (n.getRegistrationNo() != null && n.getRegistrationNo().toLowerCase().contains(lower)));
+        }
+        List<NgoResponse> list = stream.map(this::toNgoResponse).toList();
+        int start = Math.min((int) pageable.getOffset(), list.size());
+        int end = Math.min(start + pageable.getPageSize(), list.size());
+        var sublist = list.subList(start, end);
+        int totalPages = size == 0 ? 1 : (int) Math.ceil((double) list.size() / size);
+        return new PageResponse<>(sublist, page, size, list.size(), totalPages, page == 0, end >= list.size());
+    }
+
+    @Transactional(readOnly = true)
+    public NgoResponse getNgoDetails(Long id) {
+        requireVolunteer();
+        Ngo ngo = ngoRepository.findById(id)
+                .orElseThrow(() -> ApiException.notFound("NGO_NOT_FOUND", "NGO not found"));
+        if (ngo.getStatus() != NgoStatus.APPROVED) {
+            throw ApiException.notFound("NGO_NOT_FOUND", "NGO not found or not active");
+        }
+        return toNgoResponse(ngo);
+    }
+
+    private NgoResponse toNgoResponse(Ngo ngo) {
+        return new NgoResponse(
+                ngo.getId(), ngo.getName(), ngo.getEmail(), ngo.getRegistrationNo(),
+                ngo.getLogoUrl(), ngo.getPhone(), ngo.getWebsite(),
+                ngo.getDivision() == null ? null
+                        : new LocationDto(ngo.getDivision().getId(), ngo.getDivision().getName(),
+                                ngo.getDivision().getBnName(), null),
+                ngo.getDistrict() == null ? null
+                        : new LocationDto(ngo.getDistrict().getId(), ngo.getDistrict().getName(),
+                                ngo.getDistrict().getBnName(), ngo.getDistrict().getDivision().getId()),
+                ngo.getThana() == null ? null
+                        : new LocationDto(ngo.getThana().getId(), ngo.getThana().getName(), ngo.getThana().getBnName(),
+                                ngo.getThana().getDistrict().getId()),
+                ngo.getStatus(), ngo.getRejectionReason(), ngo.getApprovedAt(), ngo.getCreatedAt());
     }
 }

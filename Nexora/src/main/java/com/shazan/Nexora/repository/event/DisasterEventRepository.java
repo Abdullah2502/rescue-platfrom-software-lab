@@ -15,10 +15,13 @@ import java.util.List;
 
 public interface DisasterEventRepository extends JpaRepository<DisasterEvent, Long> {
     Page<DisasterEvent> findAllByNgo(Ngo ngo, Pageable pageable);
+    Page<DisasterEvent> findAllByNgoAndStatus(Ngo ngo, EventStatus status, Pageable pageable);
+    Page<DisasterEvent> findAllByCreatedByVolunteer(Volunteer volunteer, Pageable pageable);
     Page<DisasterEvent> findAllByStatusIn(List<EventStatus> statuses, Pageable pageable);
     long countByCreatedByVolunteer(Volunteer volunteer);
     Page<DisasterEvent> findAll(Pageable pageable);
     List<DisasterEvent> findAllByStatus(EventStatus status);
+    Page<DisasterEvent> findAllByStatus(EventStatus status, Pageable pageable);
     long countByNgo(Ngo ngo);
     long countByStatus(EventStatus status);
 

@@ -4,7 +4,7 @@ export type Gender = "MALE" | "FEMALE" | "OTHER";
 export type VolunteerStatus = "PENDING_VERIFICATION" | "ACTIVE" | "INACTIVE";
 export type EventType = "FLOOD" | "CYCLONE" | "EARTHQUAKE" | "FIRE" | "PANDEMIC" | "OTHER";
 export type Severity = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
-export type EventStatus = "DRAFT" | "OPEN" | "ONGOING" | "CLOSED" | "CANCELLED";
+export type EventStatus = "DRAFT" | "PENDING_REVIEW" | "OPEN" | "ONGOING" | "CLOSED" | "CANCELLED" | "REJECTED";
 export type ShelterStatus = "OPEN" | "FULL" | "CLOSED";
 export type InventoryCategory = "FOOD" | "WATER" | "MEDICAL" | "HYGIENE" | "CLOTHING" | "EQUIPMENT" | "OTHER";
 export type DistributionStatus = "PLANNED" | "COMPLETED" | "CANCELLED";
@@ -41,6 +41,16 @@ export interface VolunteerResponse {
   dateOfBirth?: string; gender: Gender;
   division?: Location; district?: Location; thana?: Location;
   skills: string[]; status: VolunteerStatus;
+  createdAt?: string;
+  profession?: string;
+  certificateDocuments?: string[];
+}
+
+export interface UploadedFileResponse {
+  url: string;
+  filename: string;
+  contentType: string;
+  size: number;
 }
 
 export interface DisasterEventResponse {
@@ -100,4 +110,37 @@ export interface OperationsSummaryResponse {
 
 export interface NotificationResponse {
   id: number; title: string; message: string; isRead: boolean; createdAt: string;
+}
+
+export interface ChatMessageResponse {
+  id: number;
+  eventId?: number | null;
+  eventTitle?: string | null;
+  senderId: number;
+  senderRole: Role;
+  senderName: string;
+  senderEmail?: string | null;
+  message: string;
+  pinned: boolean;
+  pinnedBy?: string | null;
+  pinnedAt?: string | null;
+  createdAt: string;
+}
+
+export interface ChatEventSummaryResponse {
+  eventId: number;
+  title: string;
+  type: EventType;
+  severity: Severity;
+  status: EventStatus;
+  organizerName: string;
+  organizerType: string;
+  participantCount: number;
+  messageCount: number;
+  startAt: string;
+  endAt: string;
+}
+
+export interface SendMessageRequest {
+  message: string;
 }

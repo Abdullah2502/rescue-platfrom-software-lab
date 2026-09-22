@@ -32,11 +32,13 @@ export function NgoStatusBadge({ status }: { status: NgoStatus }) {
 
 export function EventStatusBadge({ status }: { status: EventStatus }) {
   switch (status) {
-    case "DRAFT":     return <Badge tone="outline">Draft</Badge>;
-    case "OPEN":      return <Badge tone="signal">Open</Badge>;
-    case "ONGOING":   return <Badge tone="warning">Ongoing</Badge>;
-    case "CLOSED":    return <Badge tone="muted">Closed</Badge>;
-    case "CANCELLED": return <Badge tone="muted">Cancelled</Badge>;
+    case "DRAFT":          return <Badge tone="outline">Draft</Badge>;
+    case "PENDING_REVIEW": return <Badge tone="warning">Pending review</Badge>;
+    case "OPEN":           return <Badge tone="signal">Open</Badge>;
+    case "ONGOING":        return <Badge tone="warning">Ongoing</Badge>;
+    case "CLOSED":         return <Badge tone="muted">Closed</Badge>;
+    case "CANCELLED":      return <Badge tone="muted">Cancelled</Badge>;
+    case "REJECTED":       return <Badge tone="signal">Rejected</Badge>;
   }
 }
 
