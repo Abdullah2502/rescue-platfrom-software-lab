@@ -57,7 +57,8 @@ public class SuperAdminService {
     @Transactional(readOnly = true)
     public PageResponse<NgoResponse> listNgos(NgoStatus status, int page, int size) {
         var pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Ngo> p = status == null ? ngoRepository.findAll(pageable) : ngoRepository.findAllByStatus(status, pageable);
+        Page<Ngo> p = status == null ? ngoRepository.findAll(pageable)
+                : ngoRepository.findAllByStatus(status, pageable);
         return PageResponse.from(p.map(this::toNgoResponse));
     }
 
@@ -87,7 +88,7 @@ public class SuperAdminService {
 
     @Transactional(readOnly = true)
     public PageResponse<VolunteerResponse> listVolunteers(Long divisionId, Long districtId, Long thanaId,
-                                                          VolunteerStatus status, String q, int page, int size) {
+            VolunteerStatus status, String q, int page, int size) {
         var pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         boolean hasText = q != null && !q.isBlank();
         var source = hasText
@@ -165,7 +166,9 @@ public class SuperAdminService {
     public void deleteThana(Long thanaId) {
         if (thanaRepository.existsById(thanaId)) {
             long used = volunteerRepository.count() > 0
-                    ? volunteerRepository.search(null, null, thanaId, null, org.springframework.data.domain.PageRequest.of(0, 1)).getTotalElements()
+                    ? volunteerRepository
+                            .search(null, null, thanaId, null, org.springframework.data.domain.PageRequest.of(0, 1))
+                            .getTotalElements()
                     : 0;
             if (used > 0) {
                 throw ApiException.conflict("THANA_IN_USE", "Thana is in use by volunteers");
@@ -200,9 +203,9 @@ public class SuperAdminService {
      * Delete an NGO on behalf of the super admin.
      *
      * The NGO is referenced by:
-     *   - {@code disaster_events.ngo_id}          (NOT NULL)
-     *   - {@code event_invitations.ngo_id}        (NOT NULL)
-     *   - {@code volunteers.recruited_by_ngo_id}  (NULLABLE)
+     * - {@code disaster_events.ngo_id} (NOT NULL)
+     * - {@code event_invitations.ngo_id} (NOT NULL)
+     * - {@code volunteers.recruited_by_ngo_id} (NULLABLE)
      *
      * We remove the NGO's events and invitations first (the
      * {@code event_divisions} / {@code event_districts} / {@code event_thanas}
@@ -245,11 +248,16 @@ public class SuperAdminService {
         return new NgoResponse(
                 ngo.getId(), ngo.getName(), ngo.getEmail(), ngo.getRegistrationNo(),
                 ngo.getLogoUrl(), ngo.getPhone(), ngo.getWebsite(),
-                ngo.getDivision() == null ? null : new LocationDto(ngo.getDivision().getId(), ngo.getDivision().getName(), ngo.getDivision().getBnName(), null),
-                ngo.getDistrict() == null ? null : new LocationDto(ngo.getDistrict().getId(), ngo.getDistrict().getName(), ngo.getDistrict().getBnName(), ngo.getDistrict().getDivision().getId()),
-                ngo.getThana() == null ? null : new LocationDto(ngo.getThana().getId(), ngo.getThana().getName(), ngo.getThana().getBnName(), ngo.getThana().getDistrict().getId()),
-                ngo.getStatus(), ngo.getRejectionReason(), ngo.getApprovedAt(), ngo.getCreatedAt()
-        );
+                ngo.getDivision() == null ? null
+                        : new LocationDto(ngo.getDivision().getId(), ngo.getDivision().getName(),
+                                ngo.getDivision().getBnName(), null),
+                ngo.getDistrict() == null ? null
+                        : new LocationDto(ngo.getDistrict().getId(), ngo.getDistrict().getName(),
+                                ngo.getDistrict().getBnName(), ngo.getDistrict().getDivision().getId()),
+                ngo.getThana() == null ? null
+                        : new LocationDto(ngo.getThana().getId(), ngo.getThana().getName(), ngo.getThana().getBnName(),
+                                ngo.getThana().getDistrict().getId()),
+                ngo.getStatus(), ngo.getRejectionReason(), ngo.getApprovedAt(), ngo.getCreatedAt());
     }
 
     private VolunteerResponse toVolunteerResponse(Volunteer v) {
@@ -260,11 +268,16 @@ public class SuperAdminService {
         return new VolunteerResponse(
                 v.getId(), v.getName(), v.getEmail(), v.getPhone(), v.getNid(),
                 v.getDateOfBirth(), v.getGender(),
-                v.getDivision() == null ? null : new LocationDto(v.getDivision().getId(), v.getDivision().getName(), v.getDivision().getBnName(), null),
-                v.getDistrict() == null ? null : new LocationDto(v.getDistrict().getId(), v.getDistrict().getName(), v.getDistrict().getBnName(), v.getDistrict().getDivision().getId()),
-                v.getThana() == null ? null : new LocationDto(v.getThana().getId(), v.getThana().getName(), v.getThana().getBnName(), v.getThana().getDistrict().getId()),
-                safeSkills, v.getStatus()
-        );
+                v.getDivision() == null ? null
+                        : new LocationDto(v.getDivision().getId(), v.getDivision().getName(),
+                                v.getDivision().getBnName(), null),
+                v.getDistrict() == null ? null
+                        : new LocationDto(v.getDistrict().getId(), v.getDistrict().getName(),
+                                v.getDistrict().getBnName(), v.getDistrict().getDivision().getId()),
+                v.getThana() == null ? null
+                        : new LocationDto(v.getThana().getId(), v.getThana().getName(), v.getThana().getBnName(),
+                                v.getThana().getDistrict().getId()),
+                safeSkills, v.getStatus());
     }
 
     private DisasterEventResponse toEventResponse(DisasterEvent e) {
@@ -279,20 +292,24 @@ public class SuperAdminService {
                 .map(t -> new LocationDto(t.getId(), t.getName(), t.getBnName(), t.getDistrict().getId())).toList();
         Long organizerId = e.getNgo() != null ? e.getNgo().getId()
                 : e.getCreatedByVolunteer() != null ? e.getCreatedByVolunteer().getId()
-                : e.getCreatedByAdmin() != null ? e.getCreatedByAdmin().getId() : null;
+                        : e.getCreatedByAdmin() != null ? e.getCreatedByAdmin().getId() : null;
         String organizerName = e.getNgo() != null ? e.getNgo().getName()
                 : e.getCreatedByVolunteer() != null ? e.getCreatedByVolunteer().getName()
-                : e.getCreatedByAdmin() != null ? e.getCreatedByAdmin().getName() : "Nexora";
+                        : e.getCreatedByAdmin() != null ? e.getCreatedByAdmin().getName() : "Nexora";
         String organizerType = e.getNgo() != null ? "NGO"
                 : e.getCreatedByVolunteer() != null ? "VOLUNTEER"
-                : e.getCreatedByAdmin() != null ? "ADMIN" : "PLATFORM";
+                        : e.getCreatedByAdmin() != null ? "ADMIN" : "PLATFORM";
+        String organizerEmail = e.getNgo() != null ? e.getNgo().getEmail() : null;
+        String organizerPhone = e.getNgo() != null ? e.getNgo().getPhone()
+                : (e.getCreatedByVolunteer() != null ? e.getCreatedByVolunteer().getPhone() : null);
+        String organizerWebsite = e.getNgo() != null ? e.getNgo().getWebsite() : null;
+
         return new DisasterEventResponse(
                 e.getId(), e.getTitle(), e.getType(), e.getSeverity(), e.getDescription(),
                 divs, dists, thns,
                 e.getStartAt(), e.getEndAt(), e.getRequiredVolunteers(), e.getStatus(),
-                organizerId, organizerName, organizerType,
+                organizerId, organizerName, organizerType, organizerEmail, organizerPhone, organizerWebsite,
                 participationRepository.countByEvent(e), false,
-                e.getCreatedAt()
-        );
+                e.getCreatedAt());
     }
 }

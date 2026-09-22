@@ -49,6 +49,7 @@ export interface DisasterEventResponse {
   startAt: string; endAt: string; requiredVolunteers: number;
   status: EventStatus; organizerId?: number | null; organizerName: string;
   organizerType: "NGO" | "VOLUNTEER" | "ADMIN" | "PLATFORM";
+  organizerEmail?: string | null; organizerPhone?: string | null; organizerWebsite?: string | null;
   participantCount: number; joinedByCurrentVolunteer: boolean;
   createdAt?: string;
 }
@@ -95,4 +96,8 @@ export interface DistributionResponse {
 export interface OperationsSummaryResponse {
   openShelters: number; availableBeds: number; inventoryItems: number;
   lowStockItems: number; completedDistributions: number; totalUnitsDistributed: number;
+}
+
+export interface NotificationResponse {
+  id: number; title: string; message: string; isRead: boolean; createdAt: string;
 }

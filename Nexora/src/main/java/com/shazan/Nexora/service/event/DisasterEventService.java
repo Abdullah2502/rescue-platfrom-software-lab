@@ -26,6 +26,7 @@ import com.shazan.Nexora.repository.volunteer.VolunteerRepository;
 import com.shazan.Nexora.security.CurrentUser;
 import com.shazan.Nexora.service.ngo.NgoService;
 import com.shazan.Nexora.service.certificate.CertificateService;
+import com.shazan.Nexora.service.notification.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -49,6 +50,7 @@ public class DisasterEventService {
     private final NgoRepository ngoRepository;
     private final NgoService ngoService;
     private final CertificateService certificateService;
+    private final NotificationService notificationService;
 
     @Transactional(readOnly = true)
     public PageResponse<DisasterEventResponse> listForCurrentNgo(int page, int size) {
@@ -79,7 +81,9 @@ public class DisasterEventService {
 
         // Pass the NGO directly into the builder to guarantee the relation is set
         DisasterEvent event = buildEvent(req, currentNgo, null, null);
-        return toResponse(eventRepository.save(event));
+        event = eventRepository.save(event);
+        notificationService.notifyEventCreated(event);
+        return toResponse(event);
     }
 
     @Transactional
@@ -97,14 +101,18 @@ public class DisasterEventService {
                 .orElseThrow(() -> ApiException.notFound("NGO_NOT_FOUND", "Assigned NGO not found"));
 
         DisasterEvent event = buildEvent(req, assignedNgo, admin, null);
-        return toResponse(eventRepository.save(event));
+        event = eventRepository.save(event);
+        notificationService.notifyEventCreated(event);
+        return toResponse(event);
     }
 
     @Transactional
     public DisasterEventResponse createForVolunteer(DisasterEventRequest req) {
         Volunteer volunteer = requireVolunteer();
         DisasterEvent event = buildEvent(req, null, null, volunteer);
-        return toResponse(eventRepository.save(event));
+        event = eventRepository.save(event);
+        notificationService.notifyEventCreated(event);
+        return toResponse(event);
     }
 
     @Transactional
@@ -113,6 +121,11 @@ public class DisasterEventService {
         DisasterEvent event = loadEvent(eventId);
         if (event.getStatus() != EventStatus.OPEN && event.getStatus() != EventStatus.ONGOING) {
             throw ApiException.conflict("EVENT_NOT_JOINABLE", "Only open or ongoing events can be joined");
+        }
+        if (participationRepository.existsOverlappingParticipation(volunteer.getId(), event.getStartAt(),
+                event.getEndAt())) {
+            throw ApiException.conflict("OVERLAPPING_EVENT",
+                    "You are already participating in another event during this time");
         }
         if (!participationRepository.existsByEventAndVolunteer(event, volunteer)) {
             participationRepository.save(EventParticipation.builder().event(event).volunteer(volunteer).build());
@@ -148,6 +161,7 @@ public class DisasterEventService {
         eventRepository.save(event);
         if (newStatus == EventStatus.CLOSED) {
             certificateService.generateForEvent(eventId);
+            notificationService.notifyEventClosed(event);
         }
         return toResponse(event);
     }
@@ -205,14 +219,21 @@ public class DisasterEventService {
         Long organizerId;
         String organizerName;
         String organizerType;
+        String organizerEmail = null;
+        String organizerPhone = null;
+        String organizerWebsite = null;
         if (event.getNgo() != null) {
             organizerId = event.getNgo().getId();
             organizerName = event.getNgo().getName();
             organizerType = "NGO";
+            organizerEmail = event.getNgo().getEmail();
+            organizerPhone = event.getNgo().getPhone();
+            organizerWebsite = event.getNgo().getWebsite();
         } else if (event.getCreatedByVolunteer() != null) {
             organizerId = event.getCreatedByVolunteer().getId();
             organizerName = event.getCreatedByVolunteer().getName();
             organizerType = "VOLUNTEER";
+            organizerPhone = event.getCreatedByVolunteer().getPhone();
         } else if (event.getCreatedByAdmin() != null) {
             organizerId = event.getCreatedByAdmin().getId();
             organizerName = event.getCreatedByAdmin().getName();
@@ -241,7 +262,7 @@ public class DisasterEventService {
                         .map(t -> new LocationDto(t.getId(), t.getName(), t.getBnName(), t.getDistrict().getId()))
                         .toList(),
                 event.getStartAt(), event.getEndAt(), event.getRequiredVolunteers(), event.getStatus(),
-                organizerId, organizerName, organizerType,
+                organizerId, organizerName, organizerType, organizerEmail, organizerPhone, organizerWebsite,
                 participationRepository.countByEvent(event), joined, event.getCreatedAt());
     }
 
@@ -264,7 +285,7 @@ public class DisasterEventService {
                 event.getId(), event.getTitle(), event.getType(), event.getSeverity(), event.getDescription(),
                 List.of(), List.of(), List.of(),
                 event.getStartAt(), event.getEndAt(), event.getRequiredVolunteers(), event.getStatus(),
-                null, organizerName, "PUBLIC",
+                null, organizerName, "PUBLIC", null, null, null,
                 participationRepository.countByEvent(event), false, event.getCreatedAt());
     }
 }
