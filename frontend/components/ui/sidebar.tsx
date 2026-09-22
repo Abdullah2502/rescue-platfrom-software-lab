@@ -5,6 +5,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { ChevronDown, LogOut, LucideIcon, Activity, Shield, User, Building } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth, logoutAndGoHome } from "@/lib/auth";
+import { api } from "@/lib/api";
+import type { ChatUnreadSummary } from "@/lib/types";
 import { NotificationBox } from "@/components/ui/notification-box";
 
 type NavItem = {
@@ -12,6 +14,7 @@ type NavItem = {
   href: string;
   icon: LucideIcon;
   exact?: boolean;
+  badge?: number;
 };
 
 export function AppShell({
@@ -35,6 +38,31 @@ export function AppShell({
   const { principal, clear } = useAuth();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = React.useState(false);
+  const [unread, setUnread] = React.useState<{ global: number; events: number }>({ global: 0, events: 0 });
+
+  React.useEffect(() => {
+    let active = true;
+    async function fetchUnread() {
+      try {
+        const res = await api<ChatUnreadSummary>("/api/v1/chat/unread-summary");
+        if (active && res) {
+          setUnread({
+            global: res.globalUnreadCount || 0,
+            events: res.eventUnreadCount || 0,
+          });
+        }
+      } catch {
+        // Silently keep current state if network/endpoint issues
+      }
+    }
+
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 8000);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, [pathname]);
 
   const roleLabel =
     role === "ROLE_SUPER_ADMIN" ? "SUPER ADMIN" :
@@ -45,6 +73,16 @@ export function AppShell({
     role === "ROLE_SUPER_ADMIN" ? Shield :
       role === "ROLE_NGO_ADMIN" ? Building :
         User;
+
+  const enrichedNav = nav.map((item) => {
+    let badge = item.badge;
+    if (item.href.includes("global-chat")) {
+      badge = unread.global;
+    } else if (item.href.includes("event-chats")) {
+      badge = unread.events;
+    }
+    return { ...item, badge };
+  });
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
@@ -104,8 +142,9 @@ export function AppShell({
         </div>
       </header>
 
+      {/* Mobile navigation */}
       <nav className="sticky top-16 z-30 flex gap-1 overflow-x-auto border-b border-slate-800 bg-slate-950/95 px-3 py-2 backdrop-blur-xl md:hidden" aria-label="Mobile navigation">
-        {nav.map((item) => {
+        {enrichedNav.map((item) => {
           const active = item.exact ? pathname === item.href : pathname?.startsWith(item.href);
           const Icon = item.icon;
           return (
@@ -113,12 +152,20 @@ export function AppShell({
               key={item.href}
               href={item.href}
               className={cn(
-                "inline-flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold",
+                "inline-flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold relative",
                 active ? "bg-red-600 text-white" : "text-slate-400 hover:bg-slate-900 hover:text-slate-100",
               )}
             >
               <Icon className="h-3.5 w-3.5" />
-              {item.label}
+              <span>{item.label}</span>
+              {typeof item.badge === "number" && item.badge > 0 && (
+                <span className={cn(
+                  "px-1.5 py-0.2 text-[9px] font-mono font-bold rounded-full",
+                  active ? "bg-white text-red-600 shadow-sm" : "bg-red-500 text-white"
+                )}>
+                  {item.badge > 99 ? "99+" : item.badge}
+                </span>
+              )}
             </Link>
           );
         })}
@@ -131,7 +178,7 @@ export function AppShell({
             <div className="px-3 pb-2 text-[10px] font-mono font-bold text-slate-500 uppercase tracking-widest">
               Navigation
             </div>
-            {nav.map((item) => {
+            {enrichedNav.map((item) => {
               const active = item.exact ? pathname === item.href : pathname?.startsWith(item.href);
               const Icon = item.icon;
               return (
@@ -139,14 +186,28 @@ export function AppShell({
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-semibold transition-all duration-150",
+                    "flex items-center justify-between gap-2 rounded-xl px-3.5 py-2.5 text-xs font-semibold transition-all duration-150",
                     active
                       ? "bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-glow-signal font-bold"
                       : "text-slate-400 hover:text-slate-100 hover:bg-slate-900/80"
                   )}
                 >
-                  <Icon className={cn("h-4 w-4", active ? "text-white" : "text-slate-400")} />
-                  <span>{item.label}</span>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Icon className={cn("h-4 w-4 shrink-0", active ? "text-white" : "text-slate-400")} />
+                    <span className="truncate">{item.label}</span>
+                  </div>
+                  {typeof item.badge === "number" && item.badge > 0 && (
+                    <span
+                      className={cn(
+                        "shrink-0 px-2 py-0.5 text-[10px] font-mono font-bold rounded-full transition-all",
+                        active
+                          ? "bg-white text-red-600 shadow-sm"
+                          : "bg-red-500/20 text-red-400 border border-red-500/30"
+                      )}
+                    >
+                      {item.badge > 99 ? "99+" : item.badge}
+                    </span>
+                  )}
                 </Link>
               );
             })}

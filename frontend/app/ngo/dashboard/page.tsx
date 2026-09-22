@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { EventStatusBadge, SeverityBadge, EventTypeBadge } from "@/components/ui/badge";
 import { PageHeader, StatCard, EmptyState, SectionTitle } from "@/components/ui/page";
+import { UnreadChatsCard } from "@/components/chat/UnreadChatsCard";
 import { formatDateTime } from "@/lib/utils";
 import type { DisasterEventResponse, NgoResponse, PageResp } from "@/lib/types";
 
@@ -45,6 +46,10 @@ export default function NgoDashboard() {
         <StatCard label="Ongoing"         value={ongoing} />
         <StatCard label="Closed"          value={closed}  />
         <StatCard label="Volunteers committed" value={totalAccepted} hint="Across all events" />
+      </div>
+
+      <div className="mt-8">
+        <UnreadChatsCard rolePath="ngo" />
       </div>
 
       <div className="mt-10">

@@ -37,6 +37,7 @@ public class ChatService {
     private final SuperAdminRepository adminRepository;
     private final NgoRepository ngoRepository;
     private final VolunteerRepository volunteerRepository;
+    private final com.shazan.Nexora.repository.chat.ChatReadReceiptRepository readReceiptRepository;
 
     /* -------------------------------------------------------------
      * GLOBAL CHAT METHODS
@@ -163,33 +164,170 @@ public class ChatService {
     @Transactional(readOnly = true)
     public List<ChatEventSummaryResponse> listAccessibleChatEvents() {
         var user = CurrentUser.require();
+        return getAccessibleEventsForUser(user).stream()
+                .map(this::toEventSummary)
+                .toList();
+    }
 
+    public List<DisasterEvent> getAccessibleEventsForUser(AuthenticatedUser user) {
         if (Role.ROLE_SUPER_ADMIN.name().equals(user.role())) {
-            // Super Admin can access all events
-            return eventRepository.findAll(PageRequest.of(0, 100, Sort.by("createdAt").descending())).stream()
-                    .map(this::toEventSummary)
-                    .toList();
+            return eventRepository.findAll(PageRequest.of(0, 100, Sort.by("createdAt").descending())).getContent();
         }
 
         if (Role.ROLE_NGO_ADMIN.name().equals(user.role())) {
-            // NGO can access their organized events
             Ngo ngo = ngoRepository.findById(user.ngoId() != null ? user.ngoId() : user.id()).orElse(null);
             if (ngo == null) return List.of();
-            return eventRepository.findAllByNgo(ngo, PageRequest.of(0, 100, Sort.by("createdAt").descending())).stream()
-                    .map(this::toEventSummary)
-                    .toList();
+            return eventRepository.findAllByNgo(ngo, PageRequest.of(0, 100, Sort.by("createdAt").descending())).getContent();
         }
 
         if (Role.ROLE_VOLUNTEER.name().equals(user.role())) {
-            // Volunteer can access events they've joined or created
             Volunteer v = volunteerRepository.findById(user.id()).orElse(null);
             if (v == null) return List.of();
             return participationRepository.findAllByVolunteerOrderByCreatedAtDesc(v).stream()
-                    .map(p -> toEventSummary(p.getEvent()))
+                    .map(com.shazan.Nexora.domain.event.EventParticipation::getEvent)
                     .toList();
         }
 
         return List.of();
+    }
+
+    /* -------------------------------------------------------------
+     * UNREAD TRACKING & READ RECEIPTS
+     * ------------------------------------------------------------- */
+
+    @Transactional
+    public void markGlobalAsRead(Long lastMessageId) {
+        var user = CurrentUser.require();
+        Role role = Role.valueOf(user.role());
+
+        Long targetId = lastMessageId;
+        if (targetId == null || targetId <= 0) {
+            targetId = chatMessageRepository.findFirstByEventIsNullOrderByIdDesc()
+                    .map(ChatMessage::getId)
+                    .orElse(0L);
+        }
+
+        com.shazan.Nexora.domain.chat.ChatReadReceipt receipt = readReceiptRepository
+                .findByUserIdAndUserRoleAndEventIsNull(user.id(), role)
+                .orElse(null);
+
+        if (receipt == null) {
+            receipt = com.shazan.Nexora.domain.chat.ChatReadReceipt.builder()
+                    .userId(user.id())
+                    .userRole(role)
+                    .event(null)
+                    .lastReadMessageId(targetId)
+                    .lastReadAt(Instant.now())
+                    .build();
+        } else {
+            if (targetId > receipt.getLastReadMessageId()) {
+                receipt.setLastReadMessageId(targetId);
+                receipt.setLastReadAt(Instant.now());
+            }
+        }
+        readReceiptRepository.save(receipt);
+    }
+
+    @Transactional
+    public void markEventAsRead(Long eventId, Long lastMessageId) {
+        var user = CurrentUser.require();
+        Role role = Role.valueOf(user.role());
+        DisasterEvent event = loadEvent(eventId);
+        verifyEventChatAccess(event, user);
+
+        Long targetId = lastMessageId;
+        if (targetId == null || targetId <= 0) {
+            targetId = chatMessageRepository.findFirstByEventOrderByIdDesc(event)
+                    .map(ChatMessage::getId)
+                    .orElse(0L);
+        }
+
+        com.shazan.Nexora.domain.chat.ChatReadReceipt receipt = readReceiptRepository
+                .findByUserIdAndUserRoleAndEvent(user.id(), role, event)
+                .orElse(null);
+
+        if (receipt == null) {
+            receipt = com.shazan.Nexora.domain.chat.ChatReadReceipt.builder()
+                    .userId(user.id())
+                    .userRole(role)
+                    .event(event)
+                    .lastReadMessageId(targetId)
+                    .lastReadAt(Instant.now())
+                    .build();
+        } else {
+            if (targetId > receipt.getLastReadMessageId()) {
+                receipt.setLastReadMessageId(targetId);
+                receipt.setLastReadAt(Instant.now());
+            }
+        }
+        readReceiptRepository.save(receipt);
+    }
+
+    @Transactional(readOnly = true)
+    public com.shazan.Nexora.dto.chat.ChatUnreadSummaryResponse getUnreadSummary() {
+        var user = CurrentUser.require();
+        Role role = Role.valueOf(user.role());
+
+        // 1. Global Chat Unread Count
+        com.shazan.Nexora.domain.chat.ChatReadReceipt globalReceipt = readReceiptRepository
+                .findByUserIdAndUserRoleAndEventIsNull(user.id(), role)
+                .orElse(null);
+
+        long globalUnread;
+        if (globalReceipt != null) {
+            globalUnread = chatMessageRepository.countUnreadGlobalMessages(globalReceipt.getLastReadMessageId(), user.id(), role);
+        } else {
+            globalUnread = chatMessageRepository.countAllUnreadGlobalMessages(user.id(), role);
+        }
+
+        ChatMessage latestGlobal = chatMessageRepository.findFirstByEventIsNullOrderByIdDesc().orElse(null);
+        String latestGlobalMsg = latestGlobal != null ? latestGlobal.getMessage() : null;
+        String latestGlobalSender = latestGlobal != null ? latestGlobal.getSenderName() : null;
+        Instant latestGlobalAt = latestGlobal != null ? latestGlobal.getCreatedAt() : null;
+
+        // 2. Accessible Event Chats Unread Count
+        List<DisasterEvent> accessibleEvents = getAccessibleEventsForUser(user);
+        java.util.Map<Long, com.shazan.Nexora.domain.chat.ChatReadReceipt> eventReceiptMap = readReceiptRepository
+                .findAllByUserIdAndUserRole(user.id(), role)
+                .stream()
+                .filter(r -> r.getEvent() != null)
+                .collect(java.util.stream.Collectors.toMap(r -> r.getEvent().getId(), r -> r, (a, b) -> a));
+
+        java.util.List<com.shazan.Nexora.dto.chat.ChatUnreadSummaryResponse.UnreadEventSummary> unreadEvents = new java.util.ArrayList<>();
+        long totalEventUnread = 0;
+
+        for (DisasterEvent event : accessibleEvents) {
+            com.shazan.Nexora.domain.chat.ChatReadReceipt receipt = eventReceiptMap.get(event.getId());
+            long count;
+            if (receipt != null) {
+                count = chatMessageRepository.countUnreadEventMessages(event, receipt.getLastReadMessageId(), user.id(), role);
+            } else {
+                count = chatMessageRepository.countAllUnreadEventMessages(event, user.id(), role);
+            }
+
+            if (count > 0) {
+                totalEventUnread += count;
+                ChatMessage latestMsg = chatMessageRepository.findFirstByEventOrderByIdDesc(event).orElse(null);
+                unreadEvents.add(new com.shazan.Nexora.dto.chat.ChatUnreadSummaryResponse.UnreadEventSummary(
+                        event.getId(),
+                        event.getTitle(),
+                        count,
+                        latestMsg != null ? latestMsg.getMessage() : null,
+                        latestMsg != null ? latestMsg.getSenderName() : null,
+                        latestMsg != null ? latestMsg.getCreatedAt() : null
+                ));
+            }
+        }
+
+        return new com.shazan.Nexora.dto.chat.ChatUnreadSummaryResponse(
+                globalUnread,
+                latestGlobalMsg,
+                latestGlobalSender,
+                latestGlobalAt,
+                totalEventUnread,
+                globalUnread + totalEventUnread,
+                unreadEvents
+        );
     }
 
     /* -------------------------------------------------------------

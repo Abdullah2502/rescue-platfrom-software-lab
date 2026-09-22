@@ -48,10 +48,39 @@ export function ChatRoom({
   const scrollRef = useRef<HTMLDivElement>(null);
   const isInitialLoad = useRef(true);
 
+  async function markAsRead(latestId: number) {
+    if (!latestId) return;
+    try {
+      if (fetchUrl.includes("/chat/global")) {
+        await api("/api/v1/chat/global/read", {
+          method: "POST",
+          body: JSON.stringify({ lastMessageId: latestId }),
+        });
+      } else if (fetchUrl.includes("/chat/events/")) {
+        const parts = fetchUrl.split("/chat/events/");
+        if (parts[1]) {
+          const eventId = parts[1].split("/")[0].split("?")[0];
+          if (eventId) {
+            await api(`/api/v1/chat/events/${eventId}/read`, {
+              method: "POST",
+              body: JSON.stringify({ lastMessageId: latestId }),
+            });
+          }
+        }
+      }
+    } catch {
+      // Silent failure for read receipt
+    }
+  }
+
   async function loadMessages() {
     try {
       const data = await api<ChatMessageResponse[]>(fetchUrl);
       setMessages(data || []);
+      if (data && data.length > 0) {
+        const maxId = Math.max(...data.map((m) => m.id));
+        markAsRead(maxId);
+      }
     } catch {
       // Keep existing on intermittent failure
     } finally {

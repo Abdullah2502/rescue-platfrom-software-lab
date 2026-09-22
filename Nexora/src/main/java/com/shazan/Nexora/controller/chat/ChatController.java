@@ -68,5 +68,30 @@ public class ChatController {
             @PathVariable Long messageId) {
         return ApiResponse.ok(chatService.togglePinEventMessage(eventId, messageId));
     }
+
+    /* -------------------------------------------------------------
+     * UNREAD SUMMARY & READ RECEIPT ENDPOINTS
+     * ------------------------------------------------------------- */
+
+    @GetMapping("/unread-summary")
+    public ApiResponse<com.shazan.Nexora.dto.chat.ChatUnreadSummaryResponse> getUnreadSummary() {
+        return ApiResponse.ok(chatService.getUnreadSummary());
+    }
+
+    @PostMapping("/global/read")
+    public ApiResponse<Void> markGlobalAsRead(@RequestBody(required = false) com.shazan.Nexora.dto.chat.MarkReadRequest req) {
+        Long lastId = req != null ? req.lastMessageId() : null;
+        chatService.markGlobalAsRead(lastId);
+        return ApiResponse.ok(null);
+    }
+
+    @PostMapping("/events/{eventId}/read")
+    public ApiResponse<Void> markEventAsRead(
+            @PathVariable Long eventId,
+            @RequestBody(required = false) com.shazan.Nexora.dto.chat.MarkReadRequest req) {
+        Long lastId = req != null ? req.lastMessageId() : null;
+        chatService.markEventAsRead(eventId, lastId);
+        return ApiResponse.ok(null);
+    }
 }
 

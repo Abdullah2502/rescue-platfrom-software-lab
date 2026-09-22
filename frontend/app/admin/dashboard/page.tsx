@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowRight, ShieldCheck, Users, Megaphone, MapPin, Activity, RefreshCw } from "lucide-react";
 import { api } from "@/lib/api";
 import { StatCard, PageHeader, ErrorState } from "@/components/ui/page";
+import { UnreadChatsCard } from "@/components/chat/UnreadChatsCard";
 
 type Stats = {
   ngosPending: number;
@@ -95,6 +96,8 @@ export default function AdminDashboard() {
             <StatCard label="Volunteers Active" value={stats.volunteersActive} hint={`of ${stats.volunteersTotal} total`} />
             <StatCard label="Active Events" value={stats.eventsActive} hint="Live disaster dispatches" />
           </div>
+
+          <UnreadChatsCard rolePath="admin" />
 
           <div className="space-y-4">
             <h2 className="font-display text-xl font-bold text-slate-100 tracking-tight">Administrative Controls</h2>

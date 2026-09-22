@@ -144,3 +144,22 @@ export interface ChatEventSummaryResponse {
 export interface SendMessageRequest {
   message: string;
 }
+
+export interface UnreadEventSummary {
+  eventId: number;
+  eventTitle: string;
+  unreadCount: number;
+  lastMessage: string | null;
+  lastSenderName: string | null;
+  lastMessageAt: string | null;
+}
+
+export interface ChatUnreadSummary {
+  globalUnreadCount: number;
+  latestGlobalMessage: string | null;
+  latestGlobalSenderName: string | null;
+  latestGlobalAt: string | null;
+  eventUnreadCount: number;
+  totalUnreadCount: number;
+  unreadEvents: UnreadEventSummary[];
+}

@@ -27,5 +27,47 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
     List<ChatMessage> findEventMessages(@Param("event") DisasterEvent event);
 
     long countByEvent(DisasterEvent event);
+
+    java.util.Optional<ChatMessage> findFirstByEventIsNullOrderByIdDesc();
+
+    java.util.Optional<ChatMessage> findFirstByEventOrderByIdDesc(DisasterEvent event);
+
+    @Query("""
+        SELECT COUNT(m) FROM ChatMessage m
+        WHERE m.event IS NULL
+          AND m.id > :lastReadId
+          AND NOT (m.senderId = :userId AND m.senderRole = :userRole)
+    """)
+    long countUnreadGlobalMessages(@Param("lastReadId") Long lastReadId,
+                                   @Param("userId") Long userId,
+                                   @Param("userRole") com.shazan.Nexora.domain.enums.Role userRole);
+
+    @Query("""
+        SELECT COUNT(m) FROM ChatMessage m
+        WHERE m.event IS NULL
+          AND NOT (m.senderId = :userId AND m.senderRole = :userRole)
+    """)
+    long countAllUnreadGlobalMessages(@Param("userId") Long userId,
+                                      @Param("userRole") com.shazan.Nexora.domain.enums.Role userRole);
+
+    @Query("""
+        SELECT COUNT(m) FROM ChatMessage m
+        WHERE m.event = :event
+          AND m.id > :lastReadId
+          AND NOT (m.senderId = :userId AND m.senderRole = :userRole)
+    """)
+    long countUnreadEventMessages(@Param("event") DisasterEvent event,
+                                  @Param("lastReadId") Long lastReadId,
+                                  @Param("userId") Long userId,
+                                  @Param("userRole") com.shazan.Nexora.domain.enums.Role userRole);
+
+    @Query("""
+        SELECT COUNT(m) FROM ChatMessage m
+        WHERE m.event = :event
+          AND NOT (m.senderId = :userId AND m.senderRole = :userRole)
+    """)
+    long countAllUnreadEventMessages(@Param("event") DisasterEvent event,
+                                     @Param("userId") Long userId,
+                                     @Param("userRole") com.shazan.Nexora.domain.enums.Role userRole);
 }
 
