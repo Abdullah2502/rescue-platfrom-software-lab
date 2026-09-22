@@ -24,6 +24,7 @@ public interface DisasterEventRepository extends JpaRepository<DisasterEvent, Lo
     Page<DisasterEvent> findAllByStatus(EventStatus status, Pageable pageable);
     long countByNgo(Ngo ngo);
     long countByStatus(EventStatus status);
+    long countByStatusIn(List<EventStatus> statuses);
 
     /**
      * Bulk-delete every event owned by an NGO. The {@code @Modifying}

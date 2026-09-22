@@ -184,6 +184,8 @@ public class DisasterEventService {
         if (newStatus == EventStatus.CLOSED) {
             certificateService.generateForEvent(eventId);
             notificationService.notifyEventClosed(event);
+        } else if (newStatus == EventStatus.OPEN) {
+            notificationService.notifyEventCreated(event);
         }
         return toResponse(event);
     }

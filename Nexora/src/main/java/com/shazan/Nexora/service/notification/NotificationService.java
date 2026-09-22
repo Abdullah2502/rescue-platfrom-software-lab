@@ -2,6 +2,7 @@ package com.shazan.Nexora.service.notification;
 
 import com.shazan.Nexora.common.PageResponse;
 import com.shazan.Nexora.common.exception.ApiException;
+import com.shazan.Nexora.domain.enums.EventStatus;
 import com.shazan.Nexora.domain.event.DisasterEvent;
 import com.shazan.Nexora.domain.location.District;
 import com.shazan.Nexora.domain.location.Division;
@@ -103,6 +104,9 @@ public class NotificationService {
 
     @Transactional
     public void notifyEventCreated(DisasterEvent event) {
+        if (event.getStatus() != EventStatus.OPEN) {
+            return;
+        }
         Set<Long> eventThanaIds = event.getThanas().stream().map(Thana::getId).collect(Collectors.toSet());
         Set<Long> eventDistrictIds = event.getDistricts().stream().map(District::getId).collect(Collectors.toSet());
         Set<Long> eventDivisionIds = event.getDivisions().stream().map(Division::getId).collect(Collectors.toSet());
