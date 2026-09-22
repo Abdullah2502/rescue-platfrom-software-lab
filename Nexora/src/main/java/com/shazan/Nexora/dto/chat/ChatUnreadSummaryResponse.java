@@ -21,3 +21,4 @@ public record ChatUnreadSummaryResponse(
             Instant lastMessageAt
     ) {}
 }
+

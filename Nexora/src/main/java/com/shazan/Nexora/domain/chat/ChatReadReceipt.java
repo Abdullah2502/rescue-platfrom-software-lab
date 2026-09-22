@@ -45,3 +45,4 @@ public class ChatReadReceipt extends BaseEntity {
     @Column(name = "last_read_at", nullable = false)
     private Instant lastReadAt;
 }
+

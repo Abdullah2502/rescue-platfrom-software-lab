@@ -16,3 +16,4 @@ public interface ChatReadReceiptRepository extends JpaRepository<ChatReadReceipt
 
     List<ChatReadReceipt> findAllByUserIdAndUserRole(Long userId, Role userRole);
 }
+

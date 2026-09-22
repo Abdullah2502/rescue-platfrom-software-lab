@@ -1,206 +1,203 @@
-# Nexora
+# Nexora — Disaster Response & Volunteer Coordination Platform
 
-Nexora is a disaster management and volunteer recruitment platform for Bangladesh. It connects NGOs, volunteers, and system administrators so that disaster-response events can be created, joined, monitored, and documented.
+Nexora is an enterprise-grade disaster management and volunteer mobilization platform tailored for Bangladesh. It connects **Super Admins**, **registered NGOs**, and **civic volunteers** to rapidly report, coordinate, verify, and resolve emergency response operations across Bangladesh's 8 Divisions, 64 Districts, and 495+ Thanas.
 
-The repository contains a Next.js frontend and a Spring Boot REST API backed by PostgreSQL.
+The solution features a reactive **Next.js 14** web application coupled with a secure **Spring Boot** REST API backed by **PostgreSQL**.
 
-## Features
+---
 
-- Volunteer registration, profile management, and event participation
-- NGO registration with administrator approval
-- NGO volunteer management, including CSV bulk upload
-- Disaster event creation and management
-- Volunteer discovery by Division, District, and Thana
-- Direct volunteer participation in open events
-- Participation tracking and certificate management
-- Super Admin dashboards for NGOs, volunteers, events, locations, and certificates
-- JWT authentication with role-based access control
-- Email notifications through SMTP
-- Bangladesh administrative location hierarchy
+## Table of Contents
+1. [Core Features](#core-features)
+2. [User Roles & Permissions](#user-roles--permissions)
+3. [Technology Stack](#technology-stack)
+4. [Prerequisites](#prerequisites)
+5. [Step-by-Step Setup Guide](#step-by-step-setup-guide)
+   - [1. Create PostgreSQL Database](#1-create-postgresql-database)
+   - [2. Configure Database Username & Password](#2-configure-database-username--password)
+   - [3. Start Backend (Spring Boot)](#3-start-backend-spring-boot)
+   - [4. Start Frontend (Next.js)](#4-start-frontend-nextjs)
+6. [Default Seeded Credentials](#default-seeded-credentials)
+7. [Application Routes Map](#application-routes-map)
+8. [Testing & Production Builds](#testing--production-builds)
+9. [Troubleshooting & FAQ](#troubleshooting--faq)
 
-## User Roles
+---
 
-### Volunteer
+## Core Features
 
-Volunteers can register, maintain their profile and skills, browse disaster events, join events, withdraw from events, and view participation certificates.
+- **Event Proposal & Approval Workflow**:
+  - Volunteers can submit disaster event proposals (`PENDING_REVIEW`) targeted to Super Admin or a specific partner NGO.
+  - Volunteers cannot self-approve; Super Admin or the assigned NGO reviews, inspects, and approves (`OPEN`) or rejects (`REJECTED`) proposals.
+- **NGO Partner Directory**:
+  - Searchable and division-filtered NGO directory with verified registration credentials modal.
+  - Direct "Request Event to this NGO" action.
+- **Real-Time Global Broadcast Chat**:
+  - Role-attributed chat room (`/global-chat`) with sender badges (`ADMIN`, `NGO OFFICER`, `VOLUNTEER`).
+  - Super Admin announcement pinning (prominent sticky banner).
+- **Event-Based Operations Chat**:
+  - Automatic dedicated private chat room for every disaster response event (`/events/[id]/chat`).
+  - **Strict Access Control**: Restricted exclusively to joined volunteers and the organizing NGO, with universal Super Admin oversight.
+  - Organizing NGOs and Super Admins can pin critical mission updates (rendezvous points, emergency contacts, medical notices).
+- **Unread Chat Counters & Notification Badges**:
+  - Real-time unread badge counts on desktop and mobile sidebar buttons (`Global Chat` and `Event Chats`).
+  - Dedicated **Operational Communications** dashboard widget showing unread global transmissions and mission channel breakdowns with message previews.
+  - Automatic read receipt acknowledgment upon entering rooms.
+- **Volunteer Self-Join & Participation Tracking**:
+  - Direct event participation with overlap collision detection and automated certificate issuance upon event closure.
+- **Shelters & Aid Distribution Management**:
+  - Operations tracking for emergency shelters, capacity ratios, and relief inventory items.
+- **Cloud-Backed File Uploads**:
+  - Cloudinary-backed certificate and document attachment pipeline.
 
-### NGO Admin
+---
 
-NGO administrators can register their organization, manage volunteers, create disaster events, upload volunteers in bulk, and monitor event participation.
+## User Roles & Permissions
 
-### Super Admin
+| Role | Access Scope & Responsibilities |
+| :--- | :--- |
+| **Super Admin** | Platform-wide oversight, NGO registration vetting/approval, volunteer management, universal access to all event chat rooms, global message pinning, national disaster telemetry, certificate issuance, and location administration. |
+| **NGO Admin** | Organization profile management, volunteer directory management (including CSV bulk roster import), dispatching disaster events, approving volunteer event proposals, managing owned shelters/supplies, and organizing private mission chats with pinning privileges. |
+| **Volunteer** | Profile and skills management, browsing partner NGOs, proposing event requests, joining/withdrawing from open disaster operations, participating in joined mission chat rooms, participating in global broadcasts, and downloading participation certificates. |
 
-Super Admins can approve or reject NGO registrations, manage volunteers and events, administer Bangladesh location data, and manage certificates.
+---
 
 ## Technology Stack
 
-### Frontend
+- **Frontend**: Next.js 14 (App Router), React 18, TypeScript, Tailwind CSS, Lucide Icons, Radix UI, Zustand.
+- **Backend**: Java 21, Spring Boot 4.1, Spring Security (Stateless JWT + RBAC), Spring Data JPA / Hibernate, Spring Mail (SMTP), Springdoc OpenAPI.
+- **Database**: PostgreSQL 15+.
+- **Storage**: Cloudinary / Multipart upload integration.
 
-- Next.js 14 with the App Router
-- React 18
-- TypeScript
-- Tailwind CSS
-- Radix UI and custom UI components
-- Zustand for client-side authentication state
-- React Hook Form and Zod for forms and validation
-- Papa Parse for CSV processing
-
-### Backend
-
-- Java 21
-- Spring Boot 4.1
-- Spring Web MVC
-- Spring Security
-- Spring Data JPA and Hibernate
-- PostgreSQL
-- JSON Web Tokens
-- Spring Mail
-- OpenCSV
-- Springdoc OpenAPI and Swagger UI
-- Maven Wrapper
-
-## Project Structure
-
-```text
-.
-├── frontend/       Next.js web application
-├── Nexora/         Spring Boot backend
-├── architecture.md System architecture and data flow
-├── srs.md          Software requirements specification
-├── use-case.md     Use-case documentation
-└── docs/           Feature-specific documentation
-```
+---
 
 ## Prerequisites
 
-Install the following before running the project:
+Before starting, ensure the following are installed on your machine:
 
-- Node.js 18 or newer
-- npm
-- Java 21
-- PostgreSQL 15 or newer (or Docker)
+1. **Java Development Kit (JDK) 21** or newer:
+   - Check with: `java -version`
+2. **Node.js (v18.x or v20.x+)** and **npm**:
+   - Check with: `node -v` and `npm -v`
+3. **PostgreSQL (v15+)** (Local service or Docker container):
+   - Check with: `psql --version`
+4. **Git**:
+   - Check with: `git --version`
 
-## Database Setup
+---
 
-Nexora uses **PostgreSQL** as its relational database. You can run PostgreSQL either using **Docker** (recommended for quick setup) or via a **local PostgreSQL installation**.
+## Step-by-Step Setup Guide
 
-### Option 1: Run PostgreSQL with Docker (Recommended)
+### 1. Create PostgreSQL Database
 
-If you have Docker installed, you can spin up a PostgreSQL container in one command:
+You must create an empty database named `nexora` in PostgreSQL before starting the backend.
 
-```powershell
-docker run --name nexora-postgres `
-  -e POSTGRES_DB=nexora `
-  -e POSTGRES_USER=postgres `
-  -e POSTGRES_PASSWORD=postgres `
-  -p 5432:5432 `
-  -d postgres:16-alpine
+#### Option A: Using `psql` Command Line
+Open your terminal (PowerShell, Command Prompt, or Bash) and run:
+
+```bash
+# Connect to PostgreSQL (enter your PostgreSQL root password when prompted)
+psql -U postgres
 ```
 
-To stop or restart the container later:
+Inside the PostgreSQL interactive shell, run:
+```sql
+CREATE DATABASE nexora;
+\q
+```
 
-```powershell
-# Stop container
-docker stop nexora-postgres
+#### Option B: Using pgAdmin GUI
+1. Open **pgAdmin**.
+2. Connect to your PostgreSQL server.
+3. Right-click **Databases** &rarr; **Create** &rarr; **Database...**
+4. Set **Database** name to `nexora` and click **Save**.
 
-# Start container
-docker start nexora-postgres
+#### Option C: Using Docker
+If you prefer running PostgreSQL via Docker:
+```bash
+docker run --name nexora-postgres -e POSTGRES_DB=nexora -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres:16-alpine
 ```
 
 ---
 
-### Option 2: Run PostgreSQL Locally (psql / pgAdmin)
+### 2. Configure Database Username & Password
 
-If you installed PostgreSQL directly on your machine:
+The backend needs to know your PostgreSQL username and password to connect. You can configure this in **either** of two places:
 
-1. Ensure the PostgreSQL service is running:
-   - **Windows**: Check *Services* (`services.msc`) and make sure `postgresql-x64-<version>` is running, or run in PowerShell:
-     ```powershell
-     Start-Service postgresql*
-     ```
-   - **Linux / macOS**:
-     ```bash
-     sudo systemctl start postgresql   # Linux
-     brew services start postgresql@16 # macOS Homebrew
-     ```
+#### Method 1: Using `.env` File (Recommended)
+Inside the `Nexora/` directory, create a `.env` file (you can copy `.env.example`):
 
-2. Open your terminal or Command Prompt and connect via `psql`:
-   ```bash
-   psql -U postgres
-   ```
-
-3. Create the `nexora` database:
-   ```sql
-   CREATE DATABASE nexora;
-   ```
-
-4. Verify database creation:
-   ```sql
-   \l
-   \q
-   ```
-
-*(Alternatively, open **pgAdmin**, right-click **Databases** > **Create** > **Database...**, name it `nexora`, and click Save).*
-
----
-
-### Database Schema & Automatic Seeding
-
-You **do not** need to manually execute SQL schema scripts or table migrations:
-
-- **Automatic Schema Generation**: When the backend boots, Hibernate automatically creates and updates all required tables, constraints, and sequences (`spring.jpa.hibernate.ddl-auto: update`).
-- **Data Seeding**: On the initial startup, Spring Boot automatically seeds:
-  - Bangladesh administrative divisions, districts, and thanas (`BangladeshSeeder`, `BangladeshThanaSeeder`).
-  - The default Super Admin account (`SuperAdminSeeder`):
-    - **Email**: `admin@nexora.bd`
-    - **Password**: `Admin@12345`
-
----
-
-## Configuration
-
-### Frontend
-
-The frontend uses `NEXT_PUBLIC_API_URL` to locate the backend API. Create `frontend/.env.local` when the API is not running at the default address:
-
-```env
-NEXT_PUBLIC_API_URL=http://localhost:8080
+**On Windows (PowerShell):**
+```powershell
+Copy-Item Nexora/.env.example Nexora/.env
 ```
 
-### Backend
-
-The backend reads configuration from environment variables or a `.env` file placed inside `Nexora/`. Copy the template to get started:
-
-```powershell
+**On Linux/macOS:**
+```bash
 cp Nexora/.env.example Nexora/.env
 ```
 
-Adjust the database credentials to match your PostgreSQL setup:
+Open `Nexora/.env` in your editor and update `DB_USERNAME` and `DB_PASSWORD` to match your local PostgreSQL credentials:
 
 ```env
+# --- Database (PostgreSQL) ---
 DB_URL=jdbc:postgresql://localhost:5432/nexora
-DB_USERNAME=postgres
-DB_PASSWORD=your_database_password
-JWT_SECRET=replace-with-a-long-random-secret
-CORS_ALLOWED_ORIGINS=http://localhost:3000
-MAIL_USERNAME=your_smtp_username
-MAIL_PASSWORD=your_smtp_password
-SUPER_ADMIN_EMAIL=admin@nexora.bd
-SUPER_ADMIN_PASSWORD=change-this-password
+DB_USERNAME=postgres          # <-- Change to your PostgreSQL username if different
+DB_PASSWORD=your_password_here # <-- Change to your PostgreSQL password
 ```
 
-Do not commit real passwords, JWT secrets, or SMTP credentials.
+#### Method 2: Directly in `application.yaml`
+If you prefer not using a `.env` file, open:  
+[`Nexora/src/main/resources/application.yaml`](Nexora/src/main/resources/application.yaml)
 
-## Running Locally
+Locate the `datasource` block (around line 16) and set your credentials:
 
-Start the backend first:
+```yaml
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/nexora}
+    username: ${DB_USERNAME:postgres}            # <-- Default is postgres
+    password: ${DB_PASSWORD:your_password_here}  # <-- Replace with your PostgreSQL password
+    driver-class-name: org.postgresql.Driver
+```
 
+> [!TIP]
+> If your PostgreSQL server runs on a non-standard port (e.g. `5433`), update `localhost:5432` to `localhost:5433` in the `DB_URL`.
+
+---
+
+### 3. Start Backend (Spring Boot)
+
+Navigate to the `Nexora/` directory and run the application using Maven:
+
+**On Windows (PowerShell / Command Prompt):**
 ```powershell
 cd Nexora
 .\mvnw.cmd spring-boot:run
 ```
+*(Or if you have Maven installed globally: `mvn spring-boot:run`)*
 
-Start the frontend in a second terminal:
+**On macOS / Linux:**
+```bash
+cd Nexora
+chmod +x mvnw
+./mvnw spring-boot:run
+```
+
+#### What Happens on Initial Boot?
+- **Automatic Schema Creation**: Hibernate automatically builds all relational tables, indexes, and constraints (`spring.jpa.hibernate.ddl-auto: update`).
+- **Location Seeding**: Populates all 8 Bangladesh Divisions, 64 Districts, and 533 Thanas (`BangladeshSeeder`, `BangladeshThanaSeeder`).
+- **Super Admin Account**: Automatically provisions the root Super Admin account.
+
+The backend will be ready when you see:
+```text
+Started NexoraApplication in X.XXX seconds
+Tomcat started on port 8080 (http) with context path '/'
+```
+
+---
+
+### 4. Start Frontend (Next.js)
+
+In a **separate terminal window**, navigate to the `frontend/` directory, install dependencies, and launch the development server:
 
 ```powershell
 cd frontend
@@ -208,81 +205,104 @@ npm install
 npm run dev
 ```
 
-The applications will be available at:
+The frontend will start at:  
+👉 **`http://localhost:3000`**
 
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:8080
-- Swagger UI: http://localhost:8080/swagger-ui.html
-- OpenAPI JSON: http://localhost:8080/v3/api-docs
-- Health endpoint: http://localhost:8080/actuator/health
+---
 
-On Windows, use `mvnw.cmd`. On macOS or Linux, use `./mvnw`.
+## Default Seeded Credentials
 
-## Production Builds
+When the backend boots for the first time, the root Super Admin account is pre-seeded:
 
-Build the frontend:
+| Role | Email | Password |
+| :--- | :--- | :--- |
+| **Super Admin** | `admin@nexora.bd` | `Admin@12345` |
 
+### To test Volunteer & NGO workflows:
+- **Volunteer**: Register directly at `http://localhost:3000/register/volunteer`. Login as Super Admin to verify the volunteer from `/admin/volunteers`, or use the approved volunteer account.
+- **NGO**: Register an organization at `http://localhost:3000/register/ngo`. Log in as Super Admin to approve the NGO registration from `/admin/ngos`, then sign in as the approved NGO.
+
+---
+
+## Application Routes Map
+
+### Public Routes
+- `/` — Tactical landing page with national incident summary
+- `/login` — Unified role-based authentication portal
+- `/register/volunteer` — Volunteer self-registration with skills and cascading district selection
+- `/register/ngo` — NGO organizational registration
+
+### Super Admin Console (`/admin/*`)
+- `/admin/dashboard` — Platform telemetry, live metrics, and unread communication card
+- `/admin/global-chat` — Standalone platform broadcast chat with message pinning
+- `/admin/event-chats` — Directory of all active disaster event rooms with unread badges
+- `/admin/events` — Disaster event monitoring, review of volunteer proposals, and status updates
+- `/admin/ngos` — NGO verification, credential audits, and approval queue
+- `/admin/volunteers` — Volunteer verification, skill filtering, and roster administration
+- `/admin/certificates` — Certificate generation and compliance
+- `/admin/locations` — Bangladesh administrative hierarchy browser
+
+### NGO Console (`/ngo/*`)
+- `/ngo/dashboard` — Operational overview, live event status, and unread communications widget
+- `/ngo/global-chat` — Global platform feed
+- `/ngo/event-chats` — Managed mission chat directory with unread counts
+- `/ngo/events` — Incident management and review/approval of volunteer proposals
+- `/ngo/events/new` — Create and deploy a new disaster response operation
+- `/ngo/volunteers` — Volunteer roster management and CSV bulk roster upload
+- `/ngo/operations` — Shelters and relief inventory management
+- `/ngo/profile` — Verified NGO headquarters and registration profile
+
+### Volunteer Console (`/volunteer/*`)
+- `/volunteer/dashboard` — Personal commitments, response history, and unread communications card
+- `/volunteer/global-chat` — Real-time broadcast chat with `VOLUNTEER` badge
+- `/volunteer/event-chats` — Joined mission channels with unread activity indicators
+- `/volunteer/events` — Dual view: Open disaster operations & "My Event Requests" tracking
+- `/volunteer/events/new` — Propose a disaster response event to Super Admin or an NGO
+- `/volunteer/ngos` — Verified partner NGO directory with modal credentials and direct request CTA
+- `/volunteer/certificates` — Downloadable digital participation certificates
+- `/volunteer/profile` — Personal skills and geographical district update
+
+---
+
+## Testing & Production Builds
+
+### Backend Automated Tests
+Run unit and integration tests (tests run against an in-memory or PostgreSQL configuration):
+```powershell
+cd Nexora
+.\mvnw.cmd test
+```
+
+### Frontend Production Build
+To check TypeScript compilation and bundle production static assets:
 ```powershell
 cd frontend
 npm run build
 npm run start
 ```
 
-Build and test the backend:
+---
 
-```powershell
-cd Nexora
-.\mvnw.cmd clean verify
-```
+## Troubleshooting & FAQ
 
-## Main Frontend Routes
+#### 1. `FATAL: password authentication failed for user "postgres"`
+- **Cause**: The password specified in `Nexora/.env` or `Nexora/src/main/resources/application.yaml` does not match your local PostgreSQL password.
+- **Solution**: Open `Nexora/.env` and update `DB_PASSWORD=your_actual_password`. Restart the backend.
 
-- `/` - Public landing page
-- `/login` - User login
-- `/register/volunteer` - Volunteer registration
-- `/register/ngo` - NGO registration
-- `/volunteer/dashboard` - Volunteer dashboard
-- `/volunteer/events` - Volunteer event list
-- `/volunteer/certificates` - Volunteer certificates
-- `/ngo/dashboard` - NGO dashboard
-- `/ngo/events` - NGO event management
-- `/ngo/volunteers` - NGO volunteer management
-- `/admin/dashboard` - Super Admin dashboard
-- `/admin/ngos` - NGO approval and management
-- `/admin/events` - Event administration
-- `/admin/locations` - Location management
-- `/admin/certificates` - Certificate management
+#### 2. `FATAL: database "nexora" does not exist`
+- **Cause**: The `nexora` database has not been created in PostgreSQL yet.
+- **Solution**: Connect via `psql -U postgres` and run `CREATE DATABASE nexora;`.
 
-## API Notes
+#### 3. Port 8080 or Port 3000 is already in use
+- **Windows**: Find and terminate the process holding the port:
+  ```powershell
+  Get-Process -Id (Get-NetTCPConnection -LocalPort 8080).OwningProcess | Stop-Process -Force
+  ```
+- **macOS / Linux**:
+  ```bash
+  lsof -ti:8080 | xargs kill -9
+  ```
 
-The frontend sends requests to the backend using the shared API helpers in `frontend/lib/api.ts`. Authenticated requests include the JWT access token in the `Authorization` header.
-
-The backend exposes REST endpoints under `/api/v1/...` and returns response objects using a success or error structure. API documentation is available through Swagger UI when the backend is running.
-
-## Testing and Quality Checks
-
-Run the frontend checks and production build with:
-
-```powershell
-cd frontend
-npm run lint
-npm run build
-```
-
-Run backend tests with:
-
-```powershell
-cd Nexora
-.\mvnw.cmd test
-```
-
-## Documentation
-
-- [Architecture](architecture.md)
-- [Software Requirements Specification](srs.md)
-- [Use Cases](use-case.md)
-- [Event Participation Certificates](docs/event-participation-certificates.md)
-
-## License
-
-No license has been specified for this project yet.
+#### 4. OpenAPI / Swagger Documentation
+When the Spring Boot backend is running, complete interactive REST API documentation is available at:
+👉 **`http://localhost:8080/swagger-ui.html`**
