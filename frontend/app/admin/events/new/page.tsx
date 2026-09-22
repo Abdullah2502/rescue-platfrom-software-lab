@@ -82,7 +82,6 @@ export default function NewAdminEventPage() {
                     <Input value={form.title} onChange={(e) => up("title", e.target.value)} />
                 </div>
 
-                {/* 5. Added the NGO selection field here */}
                 <div className="grid gap-4 md:grid-cols-2">
                     <div>
                         <Label>Assign NGO</Label>

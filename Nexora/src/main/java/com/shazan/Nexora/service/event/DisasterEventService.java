@@ -72,15 +72,13 @@ public class DisasterEventService {
 
     @Transactional
     public DisasterEventResponse createForNgo(DisasterEventRequest req) {
-        DisasterEvent event = buildEvent(req);
-        event.setNgo(ngoService.currentNgo());
-        return toResponse(eventRepository.save(event));
-    }
+        Ngo currentNgo = ngoService.currentNgo();
+        if (currentNgo == null) {
+            throw ApiException.unauthorized("UNAUTHORIZED", "Valid NGO session required to create an event.");
+        }
 
-    @Transactional
-    public DisasterEventResponse createForVolunteer(DisasterEventRequest req) {
-        DisasterEvent event = buildEvent(req);
-        event.setCreatedByVolunteer(requireVolunteer());
+        // Pass the NGO directly into the builder to guarantee the relation is set
+        DisasterEvent event = buildEvent(req, currentNgo, null, null);
         return toResponse(eventRepository.save(event));
     }
 
@@ -90,14 +88,22 @@ public class DisasterEventService {
         SuperAdmin admin = adminRepository.findById(current.id())
                 .orElseThrow(() -> ApiException.notFound("ADMIN_NOT_FOUND", "Administrator not found"));
 
-        DisasterEvent event = buildEvent(req);
-        event.setCreatedByAdmin(admin);
+        if (req.ngoId() == null) {
+            throw ApiException.badRequest("MISSING_NGO",
+                    "Admins must explicitly select an NGO when creating an event.");
+        }
 
-        // Fetch and assign the NGO chosen by the admin
         Ngo assignedNgo = ngoRepository.findById(req.ngoId())
                 .orElseThrow(() -> ApiException.notFound("NGO_NOT_FOUND", "Assigned NGO not found"));
-        event.setNgo(assignedNgo);
 
+        DisasterEvent event = buildEvent(req, assignedNgo, admin, null);
+        return toResponse(eventRepository.save(event));
+    }
+
+    @Transactional
+    public DisasterEventResponse createForVolunteer(DisasterEventRequest req) {
+        Volunteer volunteer = requireVolunteer();
+        DisasterEvent event = buildEvent(req, null, null, volunteer);
         return toResponse(eventRepository.save(event));
     }
 
@@ -141,14 +147,13 @@ public class DisasterEventService {
         event.setStatus(newStatus);
         eventRepository.save(event);
         if (newStatus == EventStatus.CLOSED) {
-            // Closing an event is the NGO's completion signal. Certificate
-            // generation is idempotent, so retries only fill missing records.
             certificateService.generateForEvent(eventId);
         }
         return toResponse(event);
     }
 
-    private DisasterEvent buildEvent(DisasterEventRequest req) {
+    // Notice the updated method signature that accepts the entities directly
+    private DisasterEvent buildEvent(DisasterEventRequest req, Ngo ngo, SuperAdmin admin, Volunteer volunteer) {
         if (!req.endAt().isAfter(req.startAt())) {
             throw ApiException.badRequest("BAD_DATES", "The event end time must be after its start time");
         }
@@ -166,7 +171,12 @@ public class DisasterEventService {
                         : districtRepository.findAllById(req.districtIds())))
                 .thanas(new HashSet<>(req.thanaIds() == null ? List.<Thana>of()
                         : thanaRepository.findAllById(req.thanaIds())))
+                // Crucial fix: Inject relations natively through the builder
+                .ngo(ngo)
+                .createdByAdmin(admin)
+                .createdByVolunteer(volunteer)
                 .build();
+
         if (event.getDivisions().isEmpty()) {
             throw ApiException.badRequest("NO_LOCATION", "At least one division is required");
         }
@@ -235,16 +245,13 @@ public class DisasterEventService {
                 participationRepository.countByEvent(event), joined, event.getCreatedAt());
     }
 
-    // Add this to your public methods
     @Transactional(readOnly = true)
     public PageResponse<DisasterEventResponse> listPublicActiveEvents(int page, int size) {
         var pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        // Fetch only OPEN and ONGOING events for the homepage
         return PageResponse.from(eventRepository.findAllByStatusIn(
                 List.of(EventStatus.OPEN, EventStatus.ONGOING), pageable).map(this::toPublicResponse));
     }
 
-    // Add this helper method at the bottom of the file
     private DisasterEventResponse toPublicResponse(DisasterEvent event) {
         String organizerName = "Nexora Platform";
         if (event.getNgo() != null) {
@@ -255,7 +262,7 @@ public class DisasterEventService {
 
         return new DisasterEventResponse(
                 event.getId(), event.getTitle(), event.getType(), event.getSeverity(), event.getDescription(),
-                List.of(), List.of(), List.of(), // Locations omitted for homepage brevity
+                List.of(), List.of(), List.of(),
                 event.getStartAt(), event.getEndAt(), event.getRequiredVolunteers(), event.getStatus(),
                 null, organizerName, "PUBLIC",
                 participationRepository.countByEvent(event), false, event.getCreatedAt());
