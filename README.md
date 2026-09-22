@@ -78,9 +78,84 @@ Install the following before running the project:
 - Node.js 18 or newer
 - npm
 - Java 21
-- PostgreSQL 15 or newer
+- PostgreSQL 15 or newer (or Docker)
 
-Create a PostgreSQL database named `nexora`, or provide a different database URL through the backend environment variables.
+## Database Setup
+
+Nexora uses **PostgreSQL** as its relational database. You can run PostgreSQL either using **Docker** (recommended for quick setup) or via a **local PostgreSQL installation**.
+
+### Option 1: Run PostgreSQL with Docker (Recommended)
+
+If you have Docker installed, you can spin up a PostgreSQL container in one command:
+
+```powershell
+docker run --name nexora-postgres `
+  -e POSTGRES_DB=nexora `
+  -e POSTGRES_USER=postgres `
+  -e POSTGRES_PASSWORD=postgres `
+  -p 5432:5432 `
+  -d postgres:16-alpine
+```
+
+To stop or restart the container later:
+
+```powershell
+# Stop container
+docker stop nexora-postgres
+
+# Start container
+docker start nexora-postgres
+```
+
+---
+
+### Option 2: Run PostgreSQL Locally (psql / pgAdmin)
+
+If you installed PostgreSQL directly on your machine:
+
+1. Ensure the PostgreSQL service is running:
+   - **Windows**: Check *Services* (`services.msc`) and make sure `postgresql-x64-<version>` is running, or run in PowerShell:
+     ```powershell
+     Start-Service postgresql*
+     ```
+   - **Linux / macOS**:
+     ```bash
+     sudo systemctl start postgresql   # Linux
+     brew services start postgresql@16 # macOS Homebrew
+     ```
+
+2. Open your terminal or Command Prompt and connect via `psql`:
+   ```bash
+   psql -U postgres
+   ```
+
+3. Create the `nexora` database:
+   ```sql
+   CREATE DATABASE nexora;
+   ```
+
+4. Verify database creation:
+   ```sql
+   \l
+   \q
+   ```
+
+*(Alternatively, open **pgAdmin**, right-click **Databases** > **Create** > **Database...**, name it `nexora`, and click Save).*
+
+---
+
+### Database Schema & Automatic Seeding
+
+You **do not** need to manually execute SQL schema scripts or table migrations:
+
+- **Automatic Schema Generation**: When the backend boots, Hibernate automatically creates and updates all required tables, constraints, and sequences (`spring.jpa.hibernate.ddl-auto: update`).
+- **Data Seeding**: On the initial startup, Spring Boot automatically seeds:
+  - Bangladesh administrative divisions, districts, and thanas (`BangladeshSeeder`, `BangladeshThanaSeeder`).
+  - The default Super Admin account (`SuperAdminSeeder`):
+    - **Email**: `admin@nexora.bd`
+    - **Password**: `Admin@12345`
+
+---
 
 ## Configuration
 
@@ -94,7 +169,13 @@ NEXT_PUBLIC_API_URL=http://localhost:8080
 
 ### Backend
 
-The backend reads configuration from environment variables. The most important variables are:
+The backend reads configuration from environment variables or a `.env` file placed inside `Nexora/`. Copy the template to get started:
+
+```powershell
+cp Nexora/.env.example Nexora/.env
+```
+
+Adjust the database credentials to match your PostgreSQL setup:
 
 ```env
 DB_URL=jdbc:postgresql://localhost:5432/nexora
