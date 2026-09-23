@@ -9,12 +9,14 @@ import { EventStatusBadge, SeverityBadge, EventTypeBadge } from "@/components/ui
 import { PageHeader, EmptyState } from "@/components/ui/page";
 import { formatDateTime } from "@/lib/utils";
 import { toast } from "@/components/ui/toast";
+import { EventFiltersBar, filterAndSortEvents, initialEventFilters, type EventFilterState } from "@/components/ui/event-filters";
 import type { CertificateGenerationResponse, DisasterEventResponse, EventStatus, PageResp } from "@/lib/types";
 
 export default function AdminEventsPage() {
   const [data, setData] = useState<PageResp<DisasterEventResponse> | null>(null);
   const [busy, setBusy] = useState<number | null>(null);
-  const [filter, setFilter] = useState<"ALL" | "PENDING">("ALL");
+  const [tab, setTab] = useState<"ALL" | "PENDING">("ALL");
+  const [filters, setFilters] = useState<EventFilterState>(initialEventFilters);
 
   async function load() {
     try {
@@ -65,11 +67,10 @@ export default function AdminEventsPage() {
     }
   }
 
-  const pendingCount = data?.content.filter((e) => e.status === "PENDING_REVIEW").length || 0;
-  const filteredEvents = (data?.content || []).filter((e) => {
-    if (filter === "PENDING") return e.status === "PENDING_REVIEW";
-    return true;
-  });
+  const allEvents = data?.content || [];
+  const pendingCount = allEvents.filter((e) => e.status === "PENDING_REVIEW").length;
+  const tabFiltered = tab === "PENDING" ? allEvents.filter((e) => e.status === "PENDING_REVIEW") : allEvents;
+  const displayedEvents = filterAndSortEvents(tabFiltered, filters);
 
   return (
     <div className="space-y-6">
@@ -88,32 +89,50 @@ export default function AdminEventsPage() {
       {/* Tabs */}
       <div className="flex border-b border-ink-300 gap-6">
         <button
-          onClick={() => setFilter("ALL")}
-          className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
-            filter === "ALL"
+          onClick={() => setTab("ALL")}
+          className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${tab === "ALL"
               ? "border-signal text-signal font-semibold"
               : "border-transparent text-mist hover:text-ink"
-          }`}
+            }`}
         >
-          <CalendarDays className="h-4 w-4" /> All Operations ({data?.content.length || 0})
+          <CalendarDays className="h-4 w-4" /> All Operations ({allEvents.length})
         </button>
 
         <button
-          onClick={() => setFilter("PENDING")}
-          className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
-            filter === "PENDING"
+          onClick={() => setTab("PENDING")}
+          className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${tab === "PENDING"
               ? "border-signal text-signal font-semibold"
               : "border-transparent text-mist hover:text-ink"
-          }`}
+            }`}
         >
           <Clock className="h-4 w-4" /> Pending Proposals ({pendingCount})
         </button>
       </div>
 
-      {!data || filteredEvents.length === 0 ? (
+      <EventFiltersBar
+        filters={filters}
+        onChange={setFilters}
+        totalResults={displayedEvents.length}
+        showStatusFilter={tab !== "PENDING"}
+        statusOptions={[
+          { value: "ALL", label: "All Statuses" },
+          { value: "OPEN", label: "Open" },
+          { value: "ONGOING", label: "Ongoing" },
+          { value: "PENDING_REVIEW", label: "Pending Review" },
+          { value: "CLOSED", label: "Closed" },
+          { value: "CANCELLED", label: "Cancelled" },
+          { value: "REJECTED", label: "Rejected" },
+        ]}
+      />
+
+      {!data || displayedEvents.length === 0 ? (
         <EmptyState
-          title={filter === "PENDING" ? "No pending event proposals." : "No events recorded."}
-          description={filter === "PENDING" ? "All volunteer event requests have been reviewed." : undefined}
+          title={tab === "PENDING" ? (pendingCount === 0 ? "No pending event proposals." : "No matching pending proposals.") : (allEvents.length === 0 ? "No events recorded." : "No matching events found.")}
+          description={
+            tab === "PENDING"
+              ? (pendingCount === 0 ? "All volunteer event requests have been reviewed." : "No proposals match your search or filter settings.")
+              : (allEvents.length === 0 ? undefined : "No events match your search or filter settings.")
+          }
         />
       ) : (
         <div className="border border-ink-300 rounded bg-surface overflow-hidden">
@@ -130,7 +149,7 @@ export default function AdminEventsPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredEvents.map((event) => (
+              {displayedEvents.map((event) => (
                 <tr key={event.id}>
                   <td className="font-medium text-ink max-w-[220px]">
                     <div className="truncate font-semibold">{event.title}</div>

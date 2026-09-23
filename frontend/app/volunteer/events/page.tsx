@@ -3,14 +3,14 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { 
-  CalendarDays, 
-  MapPin, 
-  Plus, 
-  Users, 
-  Clock, 
-  Send, 
-  CheckCircle2, 
+import {
+  CalendarDays,
+  MapPin,
+  Plus,
+  Users,
+  Clock,
+  Send,
+  CheckCircle2,
   AlertCircle,
   Building2,
   FileText
@@ -21,6 +21,7 @@ import { EventStatusBadge, EventTypeBadge, SeverityBadge } from "@/components/ui
 import { EmptyState, PageHeader } from "@/components/ui/page";
 import { formatDateTime } from "@/lib/utils";
 import { toast } from "@/components/ui/toast";
+import { EventFiltersBar, filterAndSortEvents, initialEventFilters, type EventFilterState } from "@/components/ui/event-filters";
 import type { DisasterEventResponse, PageResp } from "@/lib/types";
 
 function VolunteerEventsContent() {
@@ -32,6 +33,7 @@ function VolunteerEventsContent() {
   const [requestsData, setRequestsData] = useState<PageResp<DisasterEventResponse> | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<number | null>(null);
+  const [filters, setFilters] = useState<EventFilterState>(initialEventFilters);
 
   async function loadEvents() {
     try {
@@ -82,6 +84,9 @@ function VolunteerEventsContent() {
     }
   }
 
+  const rawEvents = tab === "events" ? (data?.content || []) : (requestsData?.content || []);
+  const displayedEvents = filterAndSortEvents(rawEvents, filters);
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -99,46 +104,72 @@ function VolunteerEventsContent() {
       {/* Segmented View Tabs */}
       <div className="flex border-b border-ink-300 gap-6">
         <button
-          onClick={() => setTab("events")}
-          className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
-            tab === "events"
+          onClick={() => { setTab("events"); }}
+          className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${tab === "events"
               ? "border-signal text-signal font-semibold"
               : "border-transparent text-mist hover:text-ink"
-          }`}
+            }`}
         >
           <CalendarDays className="h-4 w-4" /> Open Operations ({data?.totalElements ?? 0})
         </button>
 
         <button
-          onClick={() => setTab("requests")}
-          className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
-            tab === "requests"
+          onClick={() => { setTab("requests"); }}
+          className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${tab === "requests"
               ? "border-signal text-signal font-semibold"
               : "border-transparent text-mist hover:text-ink"
-          }`}
+            }`}
         >
           <Send className="h-4 w-4" /> My Event Requests ({requestsData?.totalElements ?? 0})
         </button>
       </div>
 
+      {/* Filter and Sorting Control Bar */}
+      <EventFiltersBar
+        filters={filters}
+        onChange={setFilters}
+        totalResults={displayedEvents.length}
+        statusOptions={
+          tab === "events"
+            ? [
+              { value: "ALL", label: "All Statuses" },
+              { value: "OPEN", label: "Open" },
+              { value: "ONGOING", label: "Ongoing" },
+              { value: "CLOSED", label: "Closed" },
+            ]
+            : [
+              { value: "ALL", label: "All Statuses" },
+              { value: "PENDING_REVIEW", label: "Under Review" },
+              { value: "OPEN", label: "Approved / Open" },
+              { value: "REJECTED", label: "Rejected" },
+            ]
+        }
+      />
+
       {loading ? (
         <div className="p-12 text-center text-sm text-mist">Loading operations telemetry...</div>
       ) : tab === "events" ? (
         /* Open Events View */
-        !data || data.content.length === 0 ? (
+        displayedEvents.length === 0 ? (
           <EmptyState
             icon={<CalendarDays className="h-10 w-10 mx-auto text-mist" />}
-            title="No Active Events Right Now"
-            description="There are currently no open disaster operations requiring volunteers. You can propose a new event for review."
+            title={rawEvents.length === 0 ? "No Active Events Right Now" : "No Matching Events Found"}
+            description={
+              rawEvents.length === 0
+                ? "There are currently no open disaster operations requiring volunteers. You can propose a new event for review."
+                : "No operations matched your search or filter criteria. Try resetting the filters."
+            }
             action={
-              <Link href="/volunteer/events/new">
-                <Button>Request an Event</Button>
-              </Link>
+              rawEvents.length === 0 ? (
+                <Link href="/volunteer/events/new">
+                  <Button>Request an Event</Button>
+                </Link>
+              ) : undefined
             }
           />
         ) : (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {data.content.map((event) => (
+            {displayedEvents.map((event) => (
               <article key={event.id} className="nx-card space-y-4 flex flex-col justify-between">
                 <div className="space-y-3">
                   <div className="flex items-start justify-between gap-3">
@@ -195,8 +226,8 @@ function VolunteerEventsContent() {
                     {busy === event.id
                       ? "Saving…"
                       : event.joinedByCurrentVolunteer
-                      ? "Withdraw"
-                      : "Join event"}
+                        ? "Withdraw"
+                        : "Join event"}
                   </Button>
                 </div>
               </article>
@@ -205,20 +236,26 @@ function VolunteerEventsContent() {
         )
       ) : (
         /* My Event Requests View */
-        !requestsData || requestsData.content.length === 0 ? (
+        displayedEvents.length === 0 ? (
           <EmptyState
             icon={<FileText className="h-10 w-10 mx-auto text-mist" />}
-            title="No Event Requests Submitted"
-            description="You have not submitted any event proposals yet. Propose an event to the Super Admin or a verified partner NGO."
+            title={rawEvents.length === 0 ? "No Event Requests Submitted" : "No Matching Requests Found"}
+            description={
+              rawEvents.length === 0
+                ? "You have not submitted any event proposals yet. Propose an event to the Super Admin or a verified partner NGO."
+                : "No event requests matched your search or filter criteria. Try resetting the filters."
+            }
             action={
-              <Link href="/volunteer/events/new">
-                <Button>Request an Event</Button>
-              </Link>
+              rawEvents.length === 0 ? (
+                <Link href="/volunteer/events/new">
+                  <Button>Request an Event</Button>
+                </Link>
+              ) : undefined
             }
           />
         ) : (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {requestsData.content.map((req) => (
+            {displayedEvents.map((req) => (
               <article key={req.id} className="nx-card space-y-4 flex flex-col justify-between">
                 <div className="space-y-3">
                   <div className="flex items-start justify-between gap-3">

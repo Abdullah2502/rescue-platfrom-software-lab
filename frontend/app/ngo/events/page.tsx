@@ -8,11 +8,14 @@ import { EventStatusBadge, SeverityBadge, EventTypeBadge } from "@/components/ui
 import { PageHeader, EmptyState } from "@/components/ui/page";
 import { formatDateTime } from "@/lib/utils";
 import { toast } from "@/components/ui/toast";
+import { EventFiltersBar, filterAndSortEvents, initialEventFilters, type EventFilterState } from "@/components/ui/event-filters";
 import type { DisasterEventResponse, EventStatus, PageResp } from "@/lib/types";
 
 export default function NgoEventsPage() {
   const [data, setData] = useState<PageResp<DisasterEventResponse> | null>(null);
-  useEffect(() => { api<PageResp<DisasterEventResponse>>("/api/v1/ngo/events?page=0&size=50").then(setData).catch(() => {}); }, []);
+  const [filters, setFilters] = useState<EventFilterState>(initialEventFilters);
+
+  useEffect(() => { api<PageResp<DisasterEventResponse>>("/api/v1/ngo/events?page=0&size=50").then(setData).catch(() => { }); }, []);
 
   async function changeStatus(id: number, s: EventStatus) {
     try {
@@ -25,8 +28,11 @@ export default function NgoEventsPage() {
     }
   }
 
+  const rawEvents = data?.content || [];
+  const displayedEvents = filterAndSortEvents(rawEvents, filters);
+
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
         eyebrow="Operations"
         title="Disaster events."
@@ -38,14 +44,35 @@ export default function NgoEventsPage() {
         }
       />
 
-      {!data || data.content.length === 0 ? (
+      <EventFiltersBar
+        filters={filters}
+        onChange={setFilters}
+        totalResults={displayedEvents.length}
+        statusOptions={[
+          { value: "ALL", label: "All Statuses" },
+          { value: "OPEN", label: "Open" },
+          { value: "ONGOING", label: "Ongoing" },
+          { value: "PENDING_REVIEW", label: "Pending Review" },
+          { value: "CLOSED", label: "Closed" },
+          { value: "CANCELLED", label: "Cancelled" },
+          { value: "REJECTED", label: "Rejected" },
+        ]}
+      />
+
+      {!data || displayedEvents.length === 0 ? (
         <EmptyState
-          title="No events yet."
-          description="Create a disaster event to start recruiting volunteers."
+          title={rawEvents.length === 0 ? "No events yet." : "No matching events found."}
+          description={
+            rawEvents.length === 0
+              ? "Create a disaster event to start recruiting volunteers."
+              : "No disaster events match your search or filter settings."
+          }
           action={
-            <Link href="/ngo/events/new">
-              <Button>Create event</Button>
-            </Link>
+            rawEvents.length === 0 ? (
+              <Link href="/ngo/events/new">
+                <Button>Create event</Button>
+              </Link>
+            ) : undefined
           }
         />
       ) : (
@@ -64,7 +91,7 @@ export default function NgoEventsPage() {
               </tr>
             </thead>
             <tbody>
-              {data.content.map((e) => (
+              {displayedEvents.map((e) => (
                 <tr key={e.id}>
                   <td>
                     <Link href={`/ngo/events/${e.id}`} className="font-medium text-ink hover:text-signal">
@@ -90,7 +117,7 @@ export default function NgoEventsPage() {
                         <Button variant="ghost" size="sm" onClick={() => changeStatus(e.id, "REJECTED")}>Reject</Button>
                       </>
                     )}
-                    {e.status === "OPEN"    && <Button variant="ghost" size="sm" onClick={() => changeStatus(e.id, "ONGOING")}>Start</Button>}
+                    {e.status === "OPEN" && <Button variant="ghost" size="sm" onClick={() => changeStatus(e.id, "ONGOING")}>Start</Button>}
                     {e.status === "ONGOING" && <Button variant="ghost" size="sm" onClick={() => changeStatus(e.id, "CLOSED")}>Finish</Button>}
                   </td>
                 </tr>
