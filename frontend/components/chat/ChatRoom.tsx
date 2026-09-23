@@ -98,24 +98,23 @@ export function ChatRoom({
     }
   }
 
-  // Active polling every 3 seconds
   useEffect(() => {
     isInitialLoad.current = true;
+    setLoading(true);
     loadMessages();
-    const interval = setInterval(loadMessages, 3000);
+    const interval = setInterval(loadMessages, 4000);
     return () => clearInterval(interval);
   }, [fetchUrl]);
 
-  async function handleSend(e?: React.FormEvent) {
-    if (e) e.preventDefault();
-    const trimmed = input.trim();
-    if (!trimmed || sending) return;
+  async function handleSend(e: React.FormEvent) {
+    e.preventDefault();
+    if (!input.trim() || sending) return;
 
     setSending(true);
     try {
       const sent = await api<ChatMessageResponse>(sendUrl, {
         method: "POST",
-        body: JSON.stringify({ message: trimmed }),
+        body: JSON.stringify({ message: input.trim() }),
       });
       setInput("");
       setMessages((prev) => [...prev, sent]);
@@ -154,20 +153,20 @@ export function ChatRoom({
   function renderRoleBadge(role: Role) {
     if (role === "ROLE_SUPER_ADMIN") {
       return (
-        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wide uppercase bg-red-500/15 text-red-300 border border-red-500/30">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold tracking-wide uppercase bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/30">
           <ShieldAlert className="h-3 w-3" /> Admin
         </span>
       );
     }
     if (role === "ROLE_NGO_ADMIN") {
       return (
-        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wide uppercase bg-sky-500/15 text-sky-300 border border-sky-500/30">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold tracking-wide uppercase bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-500/30">
           <Building2 className="h-3 w-3" /> NGO Officer
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wide uppercase bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold tracking-wide uppercase bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
         <HeartHandshake className="h-3 w-3" /> Volunteer
       </span>
     );
@@ -177,9 +176,9 @@ export function ChatRoom({
   const normalMessages = messages.filter((m) => !m.pinned);
 
   return (
-    <div className="nx-card p-0 flex flex-col h-[calc(100vh-14rem)] min-h-[500px] border border-ink-300 overflow-hidden rounded-xl bg-surface shadow-xl">
+    <div className="glass-card p-0 flex flex-col h-[calc(100vh-14rem)] min-h-[500px] border border-ink-300 overflow-hidden rounded-2xl shadow-xl">
       {/* Chat Room Header */}
-      <div className="px-6 py-4 border-b border-ink-300 bg-surface-raised flex items-center justify-between">
+      <div className="px-6 py-4 border-b border-ink-300 bg-surface flex items-center justify-between">
         <div>
           <h2 className="font-display font-bold text-ink text-lg flex items-center gap-2">
             <MessageCircle className="h-5 w-5 text-signal" />
@@ -188,33 +187,33 @@ export function ChatRoom({
           <p className="text-xs text-mist mt-0.5">{subtitle}</p>
         </div>
 
-        <div className="flex items-center gap-2 text-xs text-mist">
-          <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+        <div className="flex items-center gap-2 text-xs font-mono font-medium text-mist">
+          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
           <span>Live Channel</span>
         </div>
       </div>
 
-      {/* Pinned Messages Banner (if any) */}
+      {/* Pinned Messages Banner */}
       {pinnedMessages.length > 0 && (
-        <div className="bg-amber-500/10 border-b border-amber-500/20 px-6 py-3 space-y-2">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-300">
+        <div className="bg-amber-500/10 border-b border-amber-500/30 px-6 py-3 space-y-2">
+          <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
             <Pin className="h-3.5 w-3.5" /> Pinned Announcements ({pinnedMessages.length})
           </div>
           <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
             {pinnedMessages.map((pm) => (
               <div
                 key={pm.id}
-                className="bg-surface/80 rounded-lg p-3 border border-amber-500/30 flex items-start justify-between gap-3 text-xs"
+                className="bg-surface rounded-xl p-3.5 border border-amber-500/40 flex items-start justify-between gap-3 text-xs shadow-xs"
               >
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-ink">{pm.senderName}</span>
+                    <span className="font-bold text-ink">{pm.senderName}</span>
                     {renderRoleBadge(pm.senderRole)}
-                    <span className="text-[10px] text-mist">{formatDateTime(pm.createdAt)}</span>
+                    <span className="text-[10px] text-mist font-mono">{formatDateTime(pm.createdAt)}</span>
                   </div>
-                  <p className="text-ink font-medium whitespace-pre-wrap">{pm.message}</p>
+                  <p className="text-ink font-medium whitespace-pre-wrap leading-relaxed">{pm.message}</p>
                   {pm.pinnedBy && (
-                    <span className="text-[10px] text-amber-300/80 block">
+                    <span className="text-[10px] text-amber-700 dark:text-amber-400/90 font-mono font-semibold block">
                       📌 Pinned by {pm.pinnedBy}
                     </span>
                   )}
@@ -226,7 +225,7 @@ export function ChatRoom({
                     variant="ghost"
                     disabled={pinBusy === pm.id}
                     onClick={() => togglePin(pm)}
-                    className="text-mist hover:text-red-400 h-7 px-2 shrink-0"
+                    className="text-mist hover:text-red-500 h-7 px-2 shrink-0 font-mono text-xs"
                     title="Unpin message"
                   >
                     <X className="h-3.5 w-3.5" /> Unpin
@@ -241,11 +240,11 @@ export function ChatRoom({
       {/* Messages Stream */}
       <div
         ref={scrollRef}
-        className="flex-1 p-6 overflow-y-auto space-y-4 bg-surface/50"
+        className="flex-1 p-6 overflow-y-auto space-y-3.5 bg-paper-200/50 dark:bg-slate-950/40"
       >
         {loading ? (
-          <div className="h-full flex items-center justify-center text-sm text-mist">
-            Connecting to room stream...
+          <div className="h-full flex items-center justify-center text-sm font-mono text-mist">
+            Connecting to secure room stream...
           </div>
         ) : normalMessages.length === 0 && pinnedMessages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center text-mist space-y-2">
@@ -256,36 +255,38 @@ export function ChatRoom({
           normalMessages.map((msg) => (
             <div
               key={msg.id}
-              className="group flex items-start gap-3 text-sm hover:bg-surface-raised/40 p-2 rounded-lg transition-colors"
+              className="group flex items-start gap-3.5 p-4 rounded-xl bg-surface border border-ink-300 shadow-xs hover:border-ink-300/90 transition-all"
             >
               {/* Avatar circle */}
-              <div className="h-9 w-9 rounded-full bg-surface-raised border border-ink-300 flex items-center justify-center text-xs font-bold text-ink shrink-0">
+              <div className="h-9 w-9 rounded-full bg-paper-200 dark:bg-slate-800 border border-ink-300 flex items-center justify-center text-xs font-bold text-ink shrink-0 shadow-xs">
                 {msg.senderName.substring(0, 2).toUpperCase()}
               </div>
 
               {/* Message Body */}
-              <div className="flex-1 space-y-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-semibold text-ink text-sm">{msg.senderName}</span>
-                  {renderRoleBadge(msg.senderRole)}
-                  <span className="text-xs text-mist font-mono">
-                    {formatDateTime(msg.createdAt)}
-                  </span>
+              <div className="flex-1 min-w-0 space-y-1.5">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-bold text-ink text-sm">{msg.senderName}</span>
+                    {renderRoleBadge(msg.senderRole)}
+                    <span className="text-xs text-mist font-mono">
+                      {formatDateTime(msg.createdAt)}
+                    </span>
+                  </div>
 
                   {/* Pin action button on hover */}
                   {canPin && pinUrlGenerator && (
                     <button
                       onClick={() => togglePin(msg)}
                       disabled={pinBusy === msg.id}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity ml-auto text-mist hover:text-amber-400 flex items-center gap-1 text-xs"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity text-mist hover:text-amber-600 dark:hover:text-amber-400 flex items-center gap-1 text-xs font-mono font-medium px-2 py-0.5 rounded border border-ink-300 bg-surface hover:bg-surface-200"
                       title="Pin message to room header"
                     >
-                      <Pin className="h-3.5 w-3.5" /> Pin
+                      <Pin className="h-3 w-3" /> Pin
                     </button>
                   )}
                 </div>
 
-                <p className="text-ink text-sm leading-relaxed whitespace-pre-wrap">
+                <p className="text-ink text-sm leading-relaxed whitespace-pre-wrap break-words">
                   {msg.message}
                 </p>
               </div>
@@ -297,17 +298,17 @@ export function ChatRoom({
       {/* Message Composer */}
       <form
         onSubmit={handleSend}
-        className="p-4 border-t border-ink-300 bg-surface-raised flex items-center gap-3"
+        className="p-4 border-t border-ink-300 bg-surface flex items-center gap-3"
       >
         <div className="flex-1 relative">
           <input
             type="text"
-            placeholder="Type your message here (press Enter to send)..."
+            placeholder="Type your broadcast message (press Enter to send)..."
             value={input}
             maxLength={2000}
             onChange={(e) => setInput(e.target.value)}
             disabled={sending}
-            className="w-full h-11 rounded-lg bg-surface border border-ink-300 px-4 text-sm text-ink placeholder:text-mist focus:outline-none focus:border-signal"
+            className="w-full h-11 rounded-xl bg-paper-200/50 dark:bg-surface border border-ink-300 px-4 text-sm text-ink placeholder:text-mist focus:outline-none focus:border-signal focus:ring-1 focus:ring-signal/30 shadow-xs transition"
           />
         </div>
 
@@ -323,4 +324,3 @@ export function ChatRoom({
     </div>
   );
 }
-

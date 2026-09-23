@@ -167,25 +167,78 @@ h1, h2, h3 {
 
 :root[data-theme="light"] .glass-panel,
 :root[data-theme="light"] .glass-card {
-  background: rgba(255, 255, 255, 0.9);
-  border-color: rgba(15, 23, 42, 0.1);
-  box-shadow: 0 10px 30px -16px rgba(15, 23, 42, 0.2);
+  background: #FFFFFF;
+  border-color: #CBD5E1;
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.05), 0 10px 25px -5px rgba(15, 23, 42, 0.07);
+}
+
+:root[data-theme="light"] .glass-card:hover {
+  border-color: #94A3B8;
+  box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.07), 0 14px 28px -6px rgba(15, 23, 42, 0.12);
 }
 
 :root[data-theme="light"] .text-red-300,
 :root[data-theme="light"] .text-red-400,
-:root[data-theme="light"] .text-red-500 {
+:root[data-theme="light"] .text-red-500,
+:root[data-theme="light"] .text-red-600 {
   color: #B91C1C;
 }
 
+:root[data-theme="light"] .text-emerald-300,
 :root[data-theme="light"] .text-emerald-400,
-:root[data-theme="light"] .text-emerald-500 {
+:root[data-theme="light"] .text-emerald-500,
+:root[data-theme="light"] .text-emerald-600 {
   color: #047857;
 }
 
+:root[data-theme="light"] .text-amber-300,
 :root[data-theme="light"] .text-amber-400,
-:root[data-theme="light"] .text-amber-500 {
+:root[data-theme="light"] .text-amber-500,
+:root[data-theme="light"] .text-amber-600,
+:root[data-theme="light"] .text-amber-700,
+:root[data-theme="light"] .text-amber-800 {
   color: #B45309;
+}
+
+:root[data-theme="light"] .text-orange-300,
+:root[data-theme="light"] .text-orange-400,
+:root[data-theme="light"] .text-orange-500,
+:root[data-theme="light"] .text-orange-600 {
+  color: #C2410C;
+}
+
+:root[data-theme="light"] .text-cyan-300,
+:root[data-theme="light"] .text-cyan-400,
+:root[data-theme="light"] .text-cyan-500,
+:root[data-theme="light"] .text-cyan-600 {
+  color: #0E7490;
+}
+
+:root[data-theme="light"] .text-teal-300,
+:root[data-theme="light"] .text-teal-400,
+:root[data-theme="light"] .text-teal-500,
+:root[data-theme="light"] .text-teal-600 {
+  color: #0F766E;
+}
+
+:root[data-theme="light"] .text-sky-300,
+:root[data-theme="light"] .text-sky-400,
+:root[data-theme="light"] .text-sky-500,
+:root[data-theme="light"] .text-sky-600 {
+  color: #0369A1;
+}
+
+:root[data-theme="light"] .text-rose-300,
+:root[data-theme="light"] .text-rose-400,
+:root[data-theme="light"] .text-rose-500,
+:root[data-theme="light"] .text-rose-600 {
+  color: #E11D48;
+}
+
+:root[data-theme="light"] .text-purple-300,
+:root[data-theme="light"] .text-purple-400,
+:root[data-theme="light"] .text-purple-500 {
+  color: #7E22CE;
 }
 
 :root[data-theme="light"] ::-webkit-scrollbar-track { background: #F1F5F9; }

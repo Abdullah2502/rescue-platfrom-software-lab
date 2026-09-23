@@ -163,3 +163,58 @@ export interface ChatUnreadSummary {
   totalUnreadCount: number;
   unreadEvents: UnreadEventSummary[];
 }
+
+export interface WeatherTelemetry {
+  temperature: number;
+  precipitation: number;
+  windSpeed: number;
+  relativeHumidity: number;
+  weatherCode: number;
+  condition: string;
+  fetchedAt: string;
+}
+
+export interface DisasterTypeRisk {
+  eventType: EventType;
+  eventTypeName: string;
+  riskScore: number;
+  riskLevel: "LOW" | "MODERATE" | "HIGH" | "CRITICAL";
+  historicalEventCount: number;
+  avgSeverity: number;
+  seasonalMultiplier: number;
+  weatherMultiplier: number;
+  volunteerGapRatio: number;
+  predictedVolunteersNeeded: number;
+  summaryReason: string;
+}
+
+export interface VolunteerSupply {
+  activeVolunteers: number;
+  currentlyDeployed: number;
+  availableVolunteers: number;
+  topSkills: string[];
+}
+
+export interface ResourceSnapshot {
+  totalShelters: number;
+  openShelters: number;
+  availableBeds: number;
+  totalInventoryItems: number;
+  lowStockItems: number;
+}
+
+export interface DivisionForecast {
+  divisionId: number;
+  divisionName: string;
+  divisionBnName: string;
+  overallRiskLevel: "LOW" | "MODERATE" | "HIGH" | "CRITICAL";
+  overallRiskScore: number;
+  predictedVolunteersNeeded: number;
+  primaryThreat: string;
+  isUserDivision: boolean;
+  weather: WeatherTelemetry;
+  volunteerSupply: VolunteerSupply;
+  resources: ResourceSnapshot;
+  risks: DisasterTypeRisk[];
+  recommendation: string;
+}

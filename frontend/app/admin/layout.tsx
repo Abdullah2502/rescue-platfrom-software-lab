@@ -1,13 +1,14 @@
 "use client";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Award, LayoutDashboard, ShieldCheck, Users, Megaphone, Map, Plus, Warehouse, Globe, MessagesSquare } from "lucide-react";
+import { Award, LayoutDashboard, ShieldCheck, Users, Megaphone, Map, Plus, Warehouse, Globe, MessagesSquare, TrendingUp } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { AppShell } from "@/components/ui/sidebar";
 import { ToastHost } from "@/components/ui/toast";
 
 const NAV = [
   { href: "/admin/dashboard",    label: "Dashboard",       icon: LayoutDashboard, exact: true },
+  { href: "/admin/forecast",     label: "Demand Forecast", icon: TrendingUp },
   { href: "/admin/global-chat",  label: "Global Chat",     icon: Globe },
   { href: "/admin/event-chats",  label: "Event Chats",     icon: MessagesSquare },
   { href: "/admin/ngos",         label: "NGO approvals",   icon: ShieldCheck },

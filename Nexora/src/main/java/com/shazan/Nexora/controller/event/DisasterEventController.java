@@ -22,8 +22,9 @@ public class DisasterEventController {
     @PreAuthorize("hasRole('NGO_ADMIN')")
     public ApiResponse<PageResponse<DisasterEventResponse>> listForNgo(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(service.listForCurrentNgo(page, size));
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "false") boolean all) {
+        return ApiResponse.ok(service.listForCurrentNgo(page, size, all));
     }
 
     @PostMapping("/ngo/events")

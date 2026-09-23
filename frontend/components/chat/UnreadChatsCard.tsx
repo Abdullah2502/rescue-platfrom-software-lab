@@ -36,26 +36,26 @@ export function UnreadChatsCard({ rolePath }: UnreadChatsCardProps) {
   const unreadEvents = summary?.unreadEvents ?? [];
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 backdrop-blur-xl shadow-lg space-y-4">
-      <div className="flex items-center justify-between pb-3 border-b border-slate-800/80">
+    <div className="glass-card rounded-2xl border border-ink-300 p-5 shadow-lg space-y-4">
+      <div className="flex items-center justify-between pb-3 border-b border-ink-300/80">
         <div className="flex items-center gap-2.5">
-          <div className="h-8 w-8 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400">
+          <div className="h-8 w-8 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500">
             <Radio className="h-4 w-4 animate-pulse" />
           </div>
           <div>
-            <h3 className="font-display text-sm font-bold text-slate-100 flex items-center gap-2">
+            <h3 className="font-display text-sm font-bold text-ink flex items-center gap-2">
               Operational Communications
               {totalUnread > 0 ? (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-red-500/20 text-red-400 border border-red-500/30">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/30">
                   {totalUnread} unread
                 </span>
               ) : (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
                   Caught up
                 </span>
               )}
             </h3>
-            <p className="text-[11px] text-slate-400 font-mono">
+            <p className="text-[11px] text-mist font-mono">
               Live broadcast & mission dispatch channels
             </p>
           </div>
@@ -63,22 +63,22 @@ export function UnreadChatsCard({ rolePath }: UnreadChatsCardProps) {
 
         <Link
           href={`/${rolePath}/global-chat`}
-          className="text-xs font-semibold text-slate-400 hover:text-red-400 transition flex items-center gap-1 font-mono"
+          className="text-xs font-semibold text-mist hover:text-signal transition flex items-center gap-1 font-mono"
         >
           View all <ArrowRight className="h-3 w-3" />
         </Link>
       </div>
 
       {loading && !summary ? (
-        <div className="py-6 text-center text-xs text-slate-500 font-mono">
+        <div className="py-6 text-center text-xs text-mist font-mono">
           Scanning communication frequencies...
         </div>
       ) : totalUnread === 0 ? (
-        <div className="py-4 flex items-center gap-3 px-3.5 rounded-xl bg-slate-950/40 border border-slate-800/50">
-          <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
+        <div className="py-4 flex items-center gap-3 px-3.5 rounded-xl bg-surface border border-ink-300">
+          <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
           <div className="text-xs">
-            <span className="text-slate-200 font-medium">All transmissions acknowledged.</span>
-            <p className="text-slate-500 text-[11px]">
+            <span className="text-ink font-semibold">All transmissions acknowledged.</span>
+            <p className="text-mist text-[11px]">
               No unread messages across global and mission channels.
             </p>
           </div>
@@ -89,24 +89,24 @@ export function UnreadChatsCard({ rolePath }: UnreadChatsCardProps) {
           {globalUnread > 0 && (
             <Link
               href={`/${rolePath}/global-chat`}
-              className="group flex items-center justify-between p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 hover:border-red-500/40 hover:bg-slate-900/80 transition"
+              className="group flex items-center justify-between p-3 rounded-xl bg-surface border border-ink-300 hover:border-red-500/40 transition shadow-xs"
             >
               <div className="flex items-center gap-3 min-w-0 pr-2">
-                <div className="h-7 w-7 rounded-md bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
+                <div className="h-7 w-7 rounded-md bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
                   <Globe className="h-3.5 w-3.5" />
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-slate-200 group-hover:text-red-400 transition">
+                    <span className="text-xs font-bold text-ink group-hover:text-signal transition">
                       Global Incident Broadcast
                     </span>
-                    <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-red-500/20 text-red-400 border border-red-500/30">
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/30">
                       {globalUnread} new
                     </span>
                   </div>
                   {summary?.latestGlobalMessage && (
-                    <p className="text-[11px] text-slate-400 truncate mt-0.5">
-                      <span className="text-slate-500 font-mono">
+                    <p className="text-[11px] text-mist truncate mt-0.5">
+                      <span className="text-ink/80 font-mono font-medium">
                         {summary.latestGlobalSenderName || "User"}:
                       </span>{" "}
                       {summary.latestGlobalMessage}
@@ -114,7 +114,7 @@ export function UnreadChatsCard({ rolePath }: UnreadChatsCardProps) {
                   )}
                 </div>
               </div>
-              <ChevronRight className="h-4 w-4 text-slate-500 group-hover:text-red-400 group-hover:translate-x-0.5 transition shrink-0" />
+              <ChevronRight className="h-4 w-4 text-mist group-hover:text-signal group-hover:translate-x-0.5 transition shrink-0" />
             </Link>
           )}
 
@@ -123,24 +123,24 @@ export function UnreadChatsCard({ rolePath }: UnreadChatsCardProps) {
             <Link
               key={evt.eventId}
               href={`/${rolePath}/events/${evt.eventId}/chat`}
-              className="group flex items-center justify-between p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 hover:border-red-500/40 hover:bg-slate-900/80 transition"
+              className="group flex items-center justify-between p-3 rounded-xl bg-surface border border-ink-300 hover:border-red-500/40 transition shadow-xs"
             >
               <div className="flex items-center gap-3 min-w-0 pr-2">
-                <div className="h-7 w-7 rounded-md bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 shrink-0">
+                <div className="h-7 w-7 rounded-md bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-600 dark:text-rose-400 shrink-0">
                   <MessageSquare className="h-3.5 w-3.5" />
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-slate-200 group-hover:text-red-400 transition truncate">
+                    <span className="text-xs font-bold text-ink group-hover:text-signal transition truncate">
                       {evt.eventTitle}
                     </span>
-                    <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-red-500/20 text-red-400 border border-red-500/30">
+                    <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/30">
                       {evt.unreadCount} new
                     </span>
                   </div>
                   {evt.lastMessage && (
-                    <p className="text-[11px] text-slate-400 truncate mt-0.5">
-                      <span className="text-slate-500 font-mono">
+                    <p className="text-[11px] text-mist truncate mt-0.5">
+                      <span className="text-ink/80 font-mono font-medium">
                         {evt.lastSenderName || "Member"}:
                       </span>{" "}
                       {evt.lastMessage}
@@ -148,7 +148,7 @@ export function UnreadChatsCard({ rolePath }: UnreadChatsCardProps) {
                   )}
                 </div>
               </div>
-              <ChevronRight className="h-4 w-4 text-slate-500 group-hover:text-red-400 group-hover:translate-x-0.5 transition shrink-0" />
+              <ChevronRight className="h-4 w-4 text-mist group-hover:text-signal group-hover:translate-x-0.5 transition shrink-0" />
             </Link>
           ))}
         </div>
@@ -156,4 +156,3 @@ export function UnreadChatsCard({ rolePath }: UnreadChatsCardProps) {
     </div>
   );
 }
-

@@ -1,13 +1,14 @@
 "use client";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { LayoutDashboard, Users, UserPlus, UploadCloud, Megaphone, Plus, Building2, Warehouse, Globe, MessagesSquare } from "lucide-react";
+import { LayoutDashboard, Users, UserPlus, UploadCloud, Megaphone, Plus, Building2, Warehouse, Globe, MessagesSquare, TrendingUp } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { AppShell } from "@/components/ui/sidebar";
 import { ToastHost } from "@/components/ui/toast";
 
 const NAV = [
   { href: "/ngo/dashboard",       label: "Dashboard",        icon: LayoutDashboard, exact: true },
+  { href: "/ngo/forecast",        label: "Demand Forecast",  icon: TrendingUp },
   { href: "/ngo/global-chat",     label: "Global Chat",      icon: Globe },
   { href: "/ngo/event-chats",     label: "Mission Chats",    icon: MessagesSquare },
   { href: "/ngo/volunteers",      label: "Volunteers",       icon: Users },

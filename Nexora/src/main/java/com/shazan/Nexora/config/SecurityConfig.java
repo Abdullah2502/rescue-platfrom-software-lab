@@ -53,6 +53,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/ngo/**").hasRole("NGO_ADMIN")
                         .requestMatchers("/api/v1/volunteer/**").hasRole("VOLUNTEER")
                         .requestMatchers("/api/v1/events/**").hasAnyRole("NGO_ADMIN", "VOLUNTEER", "SUPER_ADMIN")
+                        .requestMatchers("/api/v1/forecast/**").hasAnyRole("SUPER_ADMIN", "NGO_ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

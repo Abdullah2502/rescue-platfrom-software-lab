@@ -53,10 +53,19 @@ public class DisasterEventService {
     private final NotificationService notificationService;
 
     @Transactional(readOnly = true)
-    public PageResponse<DisasterEventResponse> listForCurrentNgo(int page, int size) {
+    public PageResponse<DisasterEventResponse> listForCurrentNgo(int page, int size, boolean all) {
+        if (all) {
+            var pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+            return PageResponse.from(eventRepository.findAll(pageable).map(this::toResponse));
+        }
         Ngo ngo = ngoService.currentNgo();
         var pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         return PageResponse.from(eventRepository.findAllByNgo(ngo, pageable).map(this::toResponse));
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<DisasterEventResponse> listForCurrentNgo(int page, int size) {
+        return listForCurrentNgo(page, size, false);
     }
 
     @Transactional(readOnly = true)

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, ShieldCheck, Users, Megaphone, MapPin, Activity, RefreshCw } from "lucide-react";
+import { ArrowRight, ShieldCheck, Users, Megaphone, MapPin, Activity, RefreshCw, TrendingUp } from "lucide-react";
 import { api } from "@/lib/api";
 import { StatCard, PageHeader, ErrorState } from "@/components/ui/page";
 import { UnreadChatsCard } from "@/components/chat/UnreadChatsCard";
@@ -100,7 +100,7 @@ export default function AdminDashboard() {
           <UnreadChatsCard rolePath="admin" />
 
           <div className="space-y-4">
-            <h2 className="font-display text-xl font-bold text-slate-100 tracking-tight">Administrative Controls</h2>
+            <h2 className="font-display text-xl font-bold text-ink tracking-tight">Administrative Controls</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <QuickAction
                 href="/admin/ngos"
@@ -110,15 +110,21 @@ export default function AdminDashboard() {
               />
               <QuickAction
                 href="/admin/events"
-                icon={<Megaphone className="h-6 w-6 text-emerald-400" />}
+                icon={<Megaphone className="h-6 w-6 text-emerald-500 dark:text-emerald-400" />}
                 title="Monitor Active Events"
                 body="Track real-time disaster events, participant counts, and certificate issuance."
               />
               <QuickAction
                 href="/admin/volunteers"
-                icon={<Users className="h-6 w-6 text-amber-400" />}
+                icon={<Users className="h-6 w-6 text-amber-500 dark:text-amber-400" />}
                 title="Approve & Manage Volunteers"
                 body="Review pending volunteer applications, then filter the directory by Division, District, Thana, skill tag, or phone number."
+              />
+              <QuickAction
+                href="/admin/forecast"
+                icon={<TrendingUp className="h-6 w-6 text-rose-500 dark:text-rose-400" />}
+                title="Predictive Demand Forecasting"
+                body="Analyze historical disaster frequencies, live Open-Meteo weather feeds, and volunteer deficit ratios to forecast relief bottlenecks."
               />
               <QuickAction
                 href="/admin/locations"
@@ -136,16 +142,16 @@ export default function AdminDashboard() {
 
 function QuickAction({ href, icon, title, body }: { href: string; icon: React.ReactNode; title: string; body: string }) {
   return (
-    <Link href={href} className="glass-card p-6 rounded-2xl flex items-start gap-5 hover:border-red-500/40 transition group">
-      <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 group-hover:scale-110 transition-transform">
+    <Link href={href} className="glass-card p-6 rounded-2xl flex items-start gap-5 hover:border-red-500/40 border border-ink-300 transition group shadow-sm">
+      <div className="p-3 rounded-xl bg-surface border border-ink-300 group-hover:scale-110 transition-transform shrink-0 shadow-xs">
         {icon}
       </div>
       <div className="flex-1 space-y-1">
-        <h3 className="font-display font-bold text-lg text-slate-100 flex items-center gap-2 group-hover:text-red-400 transition-colors">
+        <h3 className="font-display font-bold text-lg text-ink flex items-center gap-2 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors">
           {title}
-          <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
+          <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all text-signal" />
         </h3>
-        <p className="text-sm text-slate-400 leading-relaxed">{body}</p>
+        <p className="text-sm text-mist leading-relaxed">{body}</p>
       </div>
     </Link>
   );

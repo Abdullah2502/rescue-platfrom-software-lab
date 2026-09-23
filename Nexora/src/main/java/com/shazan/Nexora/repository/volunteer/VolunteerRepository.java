@@ -65,6 +65,10 @@ public interface VolunteerRepository extends JpaRepository<Volunteer, Long> {
     List<Volunteer> findRecommendedForDivisions(@Param("divisionIds") List<Long> divisionIds,
                                                 @Param("skill") String skill);
 
+    long countByDivisionIdAndStatus(Long divisionId, VolunteerStatus status);
+
+    List<Volunteer> findAllByDivisionIdAndStatus(Long divisionId, VolunteerStatus status);
+
     /** Used by the super-admin "delete NGO" guard. */
     long countByRecruitedByNgo(Ngo ngo);
 

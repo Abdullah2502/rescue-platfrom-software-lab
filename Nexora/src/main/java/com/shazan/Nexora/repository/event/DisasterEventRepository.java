@@ -33,6 +33,12 @@ public interface DisasterEventRepository extends JpaRepository<DisasterEvent, Lo
      * / {@code event_thanas} join rows are removed automatically because
      * those tables have FKs with {@code ON DELETE CASCADE} on the event side.
      */
+    @Query("SELECT e FROM DisasterEvent e JOIN e.divisions d WHERE d.id = :divId")
+    List<DisasterEvent> findAllByDivisionId(@Param("divId") Long divisionId);
+
+    @Query("SELECT COUNT(e) FROM DisasterEvent e JOIN e.divisions d WHERE d.id = :divId AND e.status IN :statuses")
+    long countByDivisionIdAndStatusIn(@Param("divId") Long divisionId, @Param("statuses") List<EventStatus> statuses);
+
     @Modifying
     @Query("DELETE FROM DisasterEvent e WHERE e.ngo = :ngo")
     int deleteByNgo(@Param("ngo") Ngo ngo);
