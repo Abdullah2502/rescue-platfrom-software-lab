@@ -38,6 +38,9 @@ public class Ngo extends BaseEntity {
     @Column(name = "logo_url", length = 500)
     private String logoUrl;
 
+    @Column(name = "registration_certificate_url", length = 1000)
+    private String registrationCertificateUrl;
+
     @Column(nullable = false, length = 20)
     private String phone;
 
@@ -71,6 +74,7 @@ public class Ngo extends BaseEntity {
 
     @PrePersist
     private void prePersist() {
-        if (status == null) status = NgoStatus.PENDING;
+        if (status == null)
+            status = NgoStatus.PENDING;
     }
 }

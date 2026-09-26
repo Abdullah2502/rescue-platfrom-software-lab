@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, Building2, Globe } from "lucide-react";
+import { Plus, Building2, Globe, Info } from "lucide-react";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { EventStatusBadge, SeverityBadge, EventTypeBadge } from "@/components/ui/badge";
@@ -10,6 +10,7 @@ import { PageHeader, EmptyState } from "@/components/ui/page";
 import { formatDateTime } from "@/lib/utils";
 import { toast } from "@/components/ui/toast";
 import { EventFiltersBar, filterAndSortEvents, initialEventFilters, type EventFilterState } from "@/components/ui/event-filters";
+import { EventDetailsModal } from "@/components/events/event-details-modal";
 import type { DisasterEventResponse, EventStatus, PageResp, NgoResponse } from "@/lib/types";
 
 export default function NgoEventsPage() {
@@ -19,6 +20,7 @@ export default function NgoEventsPage() {
   const [scope, setScope] = useState<"MY" | "ALL">("MY");
   const [filters, setFilters] = useState<EventFilterState>(initialEventFilters);
   const [loading, setLoading] = useState(true);
+  const [selectedEvent, setSelectedEvent] = useState<DisasterEventResponse | null>(null);
 
   async function loadData() {
     setLoading(true);
@@ -74,38 +76,34 @@ export default function NgoEventsPage() {
       <div className="flex border-b border-ink-300 gap-6">
         <button
           onClick={() => setScope("MY")}
-          className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
-            scope === "MY"
-              ? "border-signal text-signal font-semibold"
-              : "border-transparent text-mist hover:text-ink"
-          }`}
+          className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${scope === "MY"
+            ? "border-signal text-signal font-semibold"
+            : "border-transparent text-mist hover:text-ink"
+            }`}
         >
           <Building2 className="h-4 w-4" />
           <span>My Organization&apos;s Events</span>
-          <span className={`px-2 py-0.5 rounded-full text-xs font-mono font-bold ${
-            scope === "MY" 
-              ? "bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/30" 
-              : "bg-surface border border-ink-300 text-mist"
-          }`}>
+          <span className={`px-2 py-0.5 rounded-full text-xs font-mono font-bold ${scope === "MY"
+            ? "bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/30"
+            : "bg-surface border border-ink-300 text-mist"
+            }`}>
             {myEvents.length}
           </span>
         </button>
 
         <button
           onClick={() => setScope("ALL")}
-          className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
-            scope === "ALL"
-              ? "border-signal text-signal font-semibold"
-              : "border-transparent text-mist hover:text-ink"
-          }`}
+          className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${scope === "ALL"
+            ? "border-signal text-signal font-semibold"
+            : "border-transparent text-mist hover:text-ink"
+            }`}
         >
           <Globe className="h-4 w-4" />
           <span>All National Events</span>
-          <span className={`px-2 py-0.5 rounded-full text-xs font-mono font-bold ${
-            scope === "ALL" 
-              ? "bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/30" 
-              : "bg-surface border border-ink-300 text-mist"
-          }`}>
+          <span className={`px-2 py-0.5 rounded-full text-xs font-mono font-bold ${scope === "ALL"
+            ? "bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/30"
+            : "bg-surface border border-ink-300 text-mist"
+            }`}>
             {allEvents.length}
           </span>
         </button>
@@ -213,7 +211,11 @@ export default function NgoEventsPage() {
                       <div className="text-mist text-[11px]">volunteers joined</div>
                     </td>
                     <td className="text-right space-x-1 whitespace-nowrap">
-                      {isMyEvent ? (
+                      <Button variant="secondary" size="sm" onClick={() => setSelectedEvent(e)}>
+                        <Info className="h-3.5 w-3.5 mr-1 inline" /> Details
+                      </Button>
+
+                      {isMyEvent && (
                         <>
                           <Link href={`/ngo/events/${e.id}`}>
                             <Button variant="secondary" size="sm">Manage</Button>
@@ -231,10 +233,6 @@ export default function NgoEventsPage() {
                             <Button variant="ghost" size="sm" onClick={() => changeStatus(e.id, "CLOSED")}>Finish</Button>
                           )}
                         </>
-                      ) : (
-                        <Link href={`/ngo/events/${e.id}`}>
-                          <Button variant="secondary" size="sm">View Details</Button>
-                        </Link>
                       )}
                     </td>
                   </tr>
@@ -243,6 +241,17 @@ export default function NgoEventsPage() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {selectedEvent && (
+        <EventDetailsModal
+          event={selectedEvent}
+          isOpen={!!selectedEvent}
+          onClose={() => setSelectedEvent(null)}
+          onSuccess={() => loadData()}
+          canEdit={Boolean(profile && selectedEvent.organizerId === profile.id)}
+          isSuperAdmin={false}
+        />
       )}
     </div>
   );

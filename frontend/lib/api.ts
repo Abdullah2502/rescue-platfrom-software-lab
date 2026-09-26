@@ -34,12 +34,22 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   const body = (await res.json().catch(() => ({}))) as ApiResponse<T>;
   if (!res.ok || (body && body.success === false)) {
     const err = (body as ApiError).error;
-    const message =
+    let message =
       typeof err === "object" && "message" in err
         ? err.message
         : typeof err === "object" && err !== null
-        ? Object.values(err).join("; ")
-        : `Request failed (${res.status})`;
+          ? Object.values(err).join("; ")
+          : `Request failed (${res.status})`;
+
+    const data = (body as any)?.data;
+    if (data && typeof data === "object" && !Array.isArray(data)) {
+      const details = Object.entries(data)
+        .map(([k, v]) => `${k}: ${v}`)
+        .join("; ");
+      if (details) {
+        message = `${message}: ${details}`;
+      }
+    }
     throw new Error(message);
   }
   return (body as ApiSuccess<T>).data;

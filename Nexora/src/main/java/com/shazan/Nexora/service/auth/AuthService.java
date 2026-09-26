@@ -53,12 +53,15 @@ public class AuthService {
         if (volunteerRepository.existsByEmail(req.email())) {
             throw ApiException.conflict("EMAIL_EXISTS", "Email already registered");
         }
-        Division division = req.divisionId() == null ? null : divisionRepository.findById(req.divisionId())
-                .orElseThrow(() -> ApiException.badRequest("DIVISION_NOT_FOUND", "Invalid division"));
-        District district = req.districtId() == null ? null : districtRepository.findById(req.districtId())
-                .orElseThrow(() -> ApiException.badRequest("DISTRICT_NOT_FOUND", "Invalid district"));
-        Thana thana = req.thanaId() == null ? null : thanaRepository.findById(req.thanaId())
-                .orElseThrow(() -> ApiException.badRequest("THANA_NOT_FOUND", "Invalid thana"));
+        Division division = req.divisionId() == null ? null
+                : divisionRepository.findById(req.divisionId())
+                        .orElseThrow(() -> ApiException.badRequest("DIVISION_NOT_FOUND", "Invalid division"));
+        District district = req.districtId() == null ? null
+                : districtRepository.findById(req.districtId())
+                        .orElseThrow(() -> ApiException.badRequest("DISTRICT_NOT_FOUND", "Invalid district"));
+        Thana thana = req.thanaId() == null ? null
+                : thanaRepository.findById(req.thanaId())
+                        .orElseThrow(() -> ApiException.badRequest("THANA_NOT_FOUND", "Invalid thana"));
 
         List<String> skills = req.skills() == null || req.skills().isBlank()
                 ? List.of()
@@ -71,7 +74,8 @@ public class AuthService {
                 .dateOfBirth(req.dateOfBirth()).gender(req.gender())
                 .division(division).district(district).thana(thana)
                 .profession(req.profession())
-                .certificateDocuments(req.certificateDocuments() == null ? new java.util.ArrayList<>() : new java.util.ArrayList<>(req.certificateDocuments()))
+                .certificateDocuments(req.certificateDocuments() == null ? new java.util.ArrayList<>()
+                        : new java.util.ArrayList<>(req.certificateDocuments()))
                 .skills(new java.util.ArrayList<>(skills))
                 .status(com.shazan.Nexora.domain.enums.VolunteerStatus.PENDING_VERIFICATION)
                 .build();
@@ -81,7 +85,8 @@ public class AuthService {
         // Self-registered volunteers can't sign in until the super admin
         // approves them — mirror the NGO flow and return null tokens.
         return new AuthResponse(null, null, 0L,
-                new AuthResponse.UserPrincipal(v.getId(), v.getEmail(), v.getName(), "ROLE_VOLUNTEER", null, v.getStatus().name()));
+                new AuthResponse.UserPrincipal(v.getId(), v.getEmail(), v.getName(), "ROLE_VOLUNTEER", null,
+                        v.getStatus().name()));
     }
 
     @Transactional
@@ -103,6 +108,7 @@ public class AuthService {
                 .name(req.name()).email(req.email())
                 .passwordHash(passwordEncoder.encode(req.password()))
                 .registrationNo(req.registrationNo())
+                .registrationCertificateUrl(req.registrationCertificateUrl())
                 .phone(req.phone()).website(req.website()).logoUrl(req.logoUrl())
                 .division(division).district(district).thana(thana)
                 .status(NgoStatus.PENDING)
@@ -112,7 +118,8 @@ public class AuthService {
         // Inform applicant — but no JWT yet since they can't log in.
         email.sendNgoApproval(ngo, EmailService.ApprovalOutcome.PENDING, null, "https://nexora.bd/login");
         return new AuthResponse(null, null, 0L,
-                new AuthResponse.UserPrincipal(ngo.getId(), ngo.getEmail(), ngo.getName(), "ROLE_NGO_ADMIN", ngo.getId(), ngo.getStatus().name()));
+                new AuthResponse.UserPrincipal(ngo.getId(), ngo.getEmail(), ngo.getName(), "ROLE_NGO_ADMIN",
+                        ngo.getId(), ngo.getStatus().name()));
     }
 
     public AuthResponse login(LoginRequest req) {
@@ -138,14 +145,16 @@ public class AuthService {
         if (vOpt.isPresent()) {
             Volunteer v = vOpt.get();
             if (v.getPasswordHash() == null) {
-                throw ApiException.forbidden("PASSWORD_NOT_SET", "Please set your password first using the link in your invite email");
+                throw ApiException.forbidden("PASSWORD_NOT_SET",
+                        "Please set your password first using the link in your invite email");
             }
             if (!passwordEncoder.matches(req.password(), v.getPasswordHash())) {
                 throw ApiException.unauthorized("BAD_CREDENTIALS", "Invalid email or password");
             }
             var vStatus = v.getStatus();
             if (vStatus == com.shazan.Nexora.domain.enums.VolunteerStatus.PENDING_VERIFICATION) {
-                throw ApiException.forbidden("VOLUNTEER_PENDING", "Your volunteer account is awaiting Super Admin approval");
+                throw ApiException.forbidden("VOLUNTEER_PENDING",
+                        "Your volunteer account is awaiting Super Admin approval");
             }
             if (vStatus == com.shazan.Nexora.domain.enums.VolunteerStatus.INACTIVE) {
                 throw ApiException.forbidden("VOLUNTEER_INACTIVE", "Your volunteer account has been deactivated");
@@ -172,7 +181,8 @@ public class AuthService {
             case "ROLE_SUPER_ADMIN" -> tokenForSuperAdmin(superAdminRepository.findById(userId)
                     .orElseThrow(() -> ApiException.unauthorized("USER_NOT_FOUND", "User not found")));
             case "ROLE_NGO_ADMIN" -> {
-                Ngo ngo = ngoRepository.findById(userId).orElseThrow(() -> ApiException.unauthorized("USER_NOT_FOUND", "User not found"));
+                Ngo ngo = ngoRepository.findById(userId)
+                        .orElseThrow(() -> ApiException.unauthorized("USER_NOT_FOUND", "User not found"));
                 if (ngo.getStatus() != NgoStatus.APPROVED) {
                     throw ApiException.forbidden("NGO_NOT_APPROVED", "NGO is not approved");
                 }
@@ -201,7 +211,8 @@ public class AuthService {
         String access = jwt.generateAccessToken(u.getId(), u.getEmail(), Role.ROLE_NGO_ADMIN, u.getId());
         String refresh = jwt.generateRefreshToken(u.getId(), u.getEmail(), Role.ROLE_NGO_ADMIN, u.getId());
         return new AuthResponse(access, refresh, jwt.getAccessExpiryMs(),
-                new AuthResponse.UserPrincipal(u.getId(), u.getEmail(), u.getName(), "ROLE_NGO_ADMIN", u.getId(), u.getStatus().name()));
+                new AuthResponse.UserPrincipal(u.getId(), u.getEmail(), u.getName(), "ROLE_NGO_ADMIN", u.getId(),
+                        u.getStatus().name()));
     }
 
     private AuthResponse tokenForVolunteer(Volunteer u) {

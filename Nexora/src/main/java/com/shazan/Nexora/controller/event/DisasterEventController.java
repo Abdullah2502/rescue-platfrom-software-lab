@@ -41,6 +41,14 @@ public class DisasterEventController {
         return ApiResponse.ok(service.listForVolunteers(page, size));
     }
 
+    @GetMapping("/volunteer/joined-events")
+    @PreAuthorize("hasRole('VOLUNTEER')")
+    public ApiResponse<PageResponse<DisasterEventResponse>> listJoinedEvents(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size) {
+        return ApiResponse.ok(service.listJoinedEventsForVolunteer(page, size));
+    }
+
     @PostMapping("/volunteer/events")
     @PreAuthorize("hasRole('VOLUNTEER')")
     public ApiResponse<DisasterEventResponse> createForVolunteer(@Valid @RequestBody DisasterEventRequest req) {
@@ -64,6 +72,14 @@ public class DisasterEventController {
     @GetMapping("/events/{id}")
     public ApiResponse<DisasterEventResponse> get(@PathVariable Long id) {
         return ApiResponse.ok(service.get(id));
+    }
+
+    @PutMapping("/events/{id}")
+    @PreAuthorize("hasAnyRole('NGO_ADMIN', 'SUPER_ADMIN')")
+    public ApiResponse<DisasterEventResponse> update(
+            @PathVariable Long id,
+            @Valid @RequestBody DisasterEventRequest req) {
+        return ApiResponse.ok(service.update(id, req));
     }
 
     @PostMapping("/volunteer/events/{id}/join")

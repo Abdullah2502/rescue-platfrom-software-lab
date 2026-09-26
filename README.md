@@ -303,6 +303,13 @@ npm run start
   lsof -ti:8080 | xargs kill -9
   ```
 
-#### 4. OpenAPI / Swagger Documentation
+#### 4. Documentation
+- [Architecture & Flow](architecture.md)
+- [Software Requirements Specification](srs.md)
+- [Use Cases](use-case.md)
+- [Event Participation & Certificates](docs/event-participation-certificates.md)
+- [Chat & Communication System](docs/chat-system.md)
+
+#### 5. OpenAPI / Swagger Documentation
 When the Spring Boot backend is running, complete interactive REST API documentation is available at:
 👉 **`http://localhost:8080/swagger-ui.html`**

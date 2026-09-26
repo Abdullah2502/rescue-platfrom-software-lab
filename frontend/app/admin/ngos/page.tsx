@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Activity, Building2, Calendar, CheckCircle2, ExternalLink, Eye, Globe, Mail, MapPin, Phone, ShieldCheck, Trash2, X, XCircle } from "lucide-react";
+import { Activity, Building2, Calendar, CheckCircle2, ExternalLink, Eye, Globe, Mail, MapPin, Phone, ShieldCheck, Trash2, X, XCircle, FileCheck, FileText } from "lucide-react";
 import { api } from "@/lib/api";
 import { Button, Input, Label, Textarea } from "@/components/ui/input";
 import { NgoStatusBadge } from "@/components/ui/badge";
@@ -276,6 +276,81 @@ export default function AdminNgosPage() {
                         <span className="text-xs text-mist italic">Not provided</span>
                       )}
                     </div>
+                  </div>
+                  <div className="col-span-full pt-3 border-t border-ink-300/40">
+                    <span className="text-xs text-mist block font-mono mb-2">Government Registration Certificate</span>
+                    {viewing.registrationCertificateUrl ? (() => {
+                      const certUrl = viewing.registrationCertificateUrl;
+                      const fullCertUrl = certUrl.startsWith("http")
+                        ? certUrl
+                        : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}${certUrl}`;
+                      const rawName = certUrl.split("/").pop() || "Registration-Certificate";
+                      const cleanName = rawName.includes("_") ? rawName.substring(rawName.indexOf("_") + 1) : rawName;
+                      const isImage = /\.(png|jpe?g|webp|gif)$/i.test(certUrl);
+                      const isPdf = /\.pdf$/i.test(certUrl);
+
+                      return (
+                        <div className="rounded-lg border border-ink-300 bg-paper p-3.5 space-y-3">
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div className="p-2 rounded bg-surface border border-ink-300 text-ink shrink-0">
+                                {isPdf ? (
+                                  <FileText className="h-5 w-5 text-red-400" />
+                                ) : (
+                                  <FileCheck className="h-5 w-5 text-blue-400" />
+                                )}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-medium text-ink text-xs truncate" title={cleanName}>
+                                  {cleanName}
+                                </p>
+                                <span className="text-[10px] font-mono text-mist uppercase">
+                                  {isPdf ? "PDF Document" : isImage ? "Image Document" : "Official Certificate"}
+                                </span>
+                              </div>
+                            </div>
+                            <a
+                              href={fullCertUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-ink-300 bg-surface hover:bg-paper-200 text-ink text-xs font-medium transition shrink-0"
+                            >
+                              <ExternalLink className="h-3.5 w-3.5 text-mist" />
+                              <span>Open in New Tab</span>
+                            </a>
+                          </div>
+
+                          {isImage && (
+                            <div className="relative max-h-64 w-full rounded border border-ink-300 overflow-hidden bg-surface flex items-center justify-center p-2">
+                              <img
+                                src={fullCertUrl}
+                                alt="Registration Certificate"
+                                className="max-h-60 w-auto object-contain rounded"
+                              />
+                            </div>
+                          )}
+
+                          {isPdf && (
+                            <div className="rounded border border-ink-300/60 bg-surface/60 p-2.5 flex items-center justify-between text-xs text-mist">
+                              <span>PDF document preview is available via external viewer.</span>
+                              <a
+                                href={fullCertUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-red-400 hover:underline font-mono text-xs flex items-center gap-1"
+                              >
+                                View PDF <ExternalLink className="h-3 w-3" />
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })() : (
+                      <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-400 flex items-center gap-2">
+                        <XCircle className="h-4 w-4 shrink-0 text-amber-400" />
+                        <span>No registration certificate uploaded for this organization.</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

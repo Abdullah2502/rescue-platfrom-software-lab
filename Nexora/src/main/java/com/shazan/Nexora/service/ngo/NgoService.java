@@ -179,7 +179,7 @@ public class NgoService {
     private NgoResponse toResponse(Ngo ngo) {
         return new NgoResponse(
                 ngo.getId(), ngo.getName(), ngo.getEmail(), ngo.getRegistrationNo(),
-                ngo.getLogoUrl(), ngo.getPhone(), ngo.getWebsite(),
+                ngo.getLogoUrl(), ngo.getRegistrationCertificateUrl(), ngo.getPhone(), ngo.getWebsite(),
                 ngo.getDivision() == null ? null
                         : new LocationDto(ngo.getDivision().getId(), ngo.getDivision().getName(),
                                 ngo.getDivision().getBnName(), null),
@@ -197,7 +197,8 @@ public class NgoService {
         // serialize it after the session is closed. .size() forces load,
         // then List.copyOf() returns a plain immutable list.
         List<String> safeSkills = v.getSkills() == null ? List.of() : List.copyOf(v.getSkills());
-        List<String> safeCerts = v.getCertificateDocuments() == null ? List.of() : List.copyOf(v.getCertificateDocuments());
+        List<String> safeCerts = v.getCertificateDocuments() == null ? List.of()
+                : List.copyOf(v.getCertificateDocuments());
         return new VolunteerResponse(
                 v.getId(), v.getName(), v.getEmail(), v.getPhone(), v.getNid(),
                 v.getDateOfBirth(), v.getGender(),

@@ -42,12 +42,18 @@ public class VolunteerService {
     @Transactional
     public VolunteerResponse updateMyProfile(com.shazan.Nexora.dto.volunteer.UpdateVolunteerProfileRequest req) {
         Volunteer v = requireVolunteer();
-        if (req.phone() != null) v.setPhone(req.phone());
-        if (req.nid() != null) v.setNid(req.nid());
-        if (req.dateOfBirth() != null) v.setDateOfBirth(req.dateOfBirth());
-        if (req.skills() != null) v.setSkills(new ArrayList<>(req.skills()));
-        if (req.profession() != null) v.setProfession(req.profession());
-        if (req.certificateDocuments() != null) v.setCertificateDocuments(new ArrayList<>(req.certificateDocuments()));
+        if (req.phone() != null)
+            v.setPhone(req.phone());
+        if (req.nid() != null)
+            v.setNid(req.nid());
+        if (req.dateOfBirth() != null)
+            v.setDateOfBirth(req.dateOfBirth());
+        if (req.skills() != null)
+            v.setSkills(new ArrayList<>(req.skills()));
+        if (req.profession() != null)
+            v.setProfession(req.profession());
+        if (req.certificateDocuments() != null)
+            v.setCertificateDocuments(new ArrayList<>(req.certificateDocuments()));
         if (req.divisionId() != null) {
             v.setDivision(divisionRepository.findById(req.divisionId())
                     .orElseThrow(() -> ApiException.badRequest("DIVISION_NOT_FOUND", "Invalid division")));
@@ -74,42 +80,43 @@ public class VolunteerService {
     }
 
     private VolunteerResponse toResponse(Volunteer v) {
-        // Copy collections into new ArrayLists while the transaction session is still active
+        // Copy collections into new ArrayLists while the transaction session is still
+        // active
         List<String> safeSkills = v.getSkills() == null ? List.of() : new ArrayList<>(v.getSkills());
-        List<String> safeCerts = v.getCertificateDocuments() == null ? List.of() : new ArrayList<>(v.getCertificateDocuments());
+        List<String> safeCerts = v.getCertificateDocuments() == null ? List.of()
+                : new ArrayList<>(v.getCertificateDocuments());
 
         return new VolunteerResponse(
-                v.getId(), 
-                v.getName(), 
-                v.getEmail(), 
-                v.getPhone(), 
+                v.getId(),
+                v.getName(),
+                v.getEmail(),
+                v.getPhone(),
                 v.getNid(),
-                v.getDateOfBirth(), 
+                v.getDateOfBirth(),
                 v.getGender(),
-                v.getDivision() == null ? null : new LocationDto(
-                        v.getDivision().getId(), 
-                        v.getDivision().getName(), 
-                        v.getDivision().getBnName(), 
-                        null
-                ),
-                v.getDistrict() == null ? null : new LocationDto(
-                        v.getDistrict().getId(), 
-                        v.getDistrict().getName(), 
-                        v.getDistrict().getBnName(), 
-                        v.getDistrict().getDivision() != null ? v.getDistrict().getDivision().getId() : null
-                ),
-                v.getThana() == null ? null : new LocationDto(
-                        v.getThana().getId(), 
-                        v.getThana().getName(), 
-                        v.getThana().getBnName(), 
-                        v.getThana().getDistrict() != null ? v.getThana().getDistrict().getId() : null
-                ),
-                safeSkills, 
+                v.getDivision() == null ? null
+                        : new LocationDto(
+                                v.getDivision().getId(),
+                                v.getDivision().getName(),
+                                v.getDivision().getBnName(),
+                                null),
+                v.getDistrict() == null ? null
+                        : new LocationDto(
+                                v.getDistrict().getId(),
+                                v.getDistrict().getName(),
+                                v.getDistrict().getBnName(),
+                                v.getDistrict().getDivision() != null ? v.getDistrict().getDivision().getId() : null),
+                v.getThana() == null ? null
+                        : new LocationDto(
+                                v.getThana().getId(),
+                                v.getThana().getName(),
+                                v.getThana().getBnName(),
+                                v.getThana().getDistrict() != null ? v.getThana().getDistrict().getId() : null),
+                safeSkills,
                 v.getStatus(),
                 v.getCreatedAt(),
                 v.getProfession(),
-                safeCerts
-        );
+                safeCerts);
     }
 
     @Transactional(readOnly = true)
@@ -150,7 +157,7 @@ public class VolunteerService {
     private NgoResponse toNgoResponse(Ngo ngo) {
         return new NgoResponse(
                 ngo.getId(), ngo.getName(), ngo.getEmail(), ngo.getRegistrationNo(),
-                ngo.getLogoUrl(), ngo.getPhone(), ngo.getWebsite(),
+                ngo.getLogoUrl(), ngo.getRegistrationCertificateUrl(), ngo.getPhone(), ngo.getWebsite(),
                 ngo.getDivision() == null ? null
                         : new LocationDto(ngo.getDivision().getId(), ngo.getDivision().getName(),
                                 ngo.getDivision().getBnName(), null),

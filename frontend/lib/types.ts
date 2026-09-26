@@ -31,7 +31,7 @@ export interface AuthResponse {
 
 export interface NgoResponse {
   id: number; name: string; email: string; registrationNo: string;
-  logoUrl?: string; phone: string; website?: string;
+  logoUrl?: string; registrationCertificateUrl?: string; phone: string; website?: string;
   division?: Location; district?: Location; thana?: Location;
   status: NgoStatus; rejectionReason?: string; approvedAt?: string; createdAt?: string;
 }

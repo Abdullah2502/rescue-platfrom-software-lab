@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, Award, CheckCircle, XCircle, Clock, CalendarDays } from "lucide-react";
+import { Plus, Award, CheckCircle, XCircle, Clock, CalendarDays, Info } from "lucide-react";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { EventStatusBadge, SeverityBadge, EventTypeBadge } from "@/components/ui/badge";
@@ -10,6 +10,7 @@ import { PageHeader, EmptyState } from "@/components/ui/page";
 import { formatDateTime } from "@/lib/utils";
 import { toast } from "@/components/ui/toast";
 import { EventFiltersBar, filterAndSortEvents, initialEventFilters, type EventFilterState } from "@/components/ui/event-filters";
+import { EventDetailsModal } from "@/components/events/event-details-modal";
 import type { CertificateGenerationResponse, DisasterEventResponse, EventStatus, PageResp } from "@/lib/types";
 
 export default function AdminEventsPage() {
@@ -17,6 +18,7 @@ export default function AdminEventsPage() {
   const [busy, setBusy] = useState<number | null>(null);
   const [tab, setTab] = useState<"ALL" | "PENDING">("ALL");
   const [filters, setFilters] = useState<EventFilterState>(initialEventFilters);
+  const [selectedEvent, setSelectedEvent] = useState<DisasterEventResponse | null>(null);
 
   async function load() {
     try {
@@ -91,8 +93,8 @@ export default function AdminEventsPage() {
         <button
           onClick={() => setTab("ALL")}
           className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${tab === "ALL"
-              ? "border-signal text-signal font-semibold"
-              : "border-transparent text-mist hover:text-ink"
+            ? "border-signal text-signal font-semibold"
+            : "border-transparent text-mist hover:text-ink"
             }`}
         >
           <CalendarDays className="h-4 w-4" /> All Operations ({allEvents.length})
@@ -101,8 +103,8 @@ export default function AdminEventsPage() {
         <button
           onClick={() => setTab("PENDING")}
           className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${tab === "PENDING"
-              ? "border-signal text-signal font-semibold"
-              : "border-transparent text-mist hover:text-ink"
+            ? "border-signal text-signal font-semibold"
+            : "border-transparent text-mist hover:text-ink"
             }`}
         >
           <Clock className="h-4 w-4" /> Pending Proposals ({pendingCount})
@@ -178,6 +180,15 @@ export default function AdminEventsPage() {
                   </td>
                   <td>
                     <div className="flex items-center gap-1.5 flex-wrap">
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => setSelectedEvent(event)}
+                        className="text-xs flex items-center gap-1"
+                      >
+                        <Info className="h-3.5 w-3.5" /> Details
+                      </Button>
+
                       {event.status === "PENDING_REVIEW" ? (
                         <>
                           <Button
@@ -223,6 +234,17 @@ export default function AdminEventsPage() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {selectedEvent && (
+        <EventDetailsModal
+          event={selectedEvent}
+          isOpen={!!selectedEvent}
+          onClose={() => setSelectedEvent(null)}
+          onSuccess={() => load()}
+          canEdit={true}
+          isSuperAdmin={true}
+        />
       )}
     </div>
   );

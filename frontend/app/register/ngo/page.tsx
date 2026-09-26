@@ -2,14 +2,15 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { api } from "@/lib/api";
+import { api, apiUpload } from "@/lib/api";
 import { Button, Input, Label, HelpText } from "@/components/ui/input";
 import { LocationCascade } from "@/components/ui/location-cascade";
 import { ErrorState } from "@/components/ui/page";
+import type { UploadedFileResponse } from "@/lib/types";
 import {
   Activity, ArrowRight, Building2, CheckCircle2, ChevronRight,
   Clock, FileSignature, Globe2, MapPin, Phone, Radio, ShieldCheck,
-  Users, Zap,
+  Users, Zap, UploadCloud, FileCheck, FileText, Trash2
 } from "lucide-react";
 
 export default function RegisterNgoPage() {
@@ -18,6 +19,9 @@ export default function RegisterNgoPage() {
     name: "", email: "", password: "", registrationNo: "", phone: "", website: "",
   });
   const [location, setLocation] = useState<{ divisionId?: number; districtId?: number; thanaId?: number }>({});
+  const [certificateFile, setCertificateFile] = useState<File | null>(null);
+  const [certificateUrl, setCertificateUrl] = useState<string | null>(null);
+  const [uploadingCert, setUploadingCert] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -45,26 +49,74 @@ export default function RegisterNgoPage() {
     setForm((p) => ({ ...p, [k]: v }));
   }
 
+  async function handleCertificateUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      setError("Certificate file exceeds 10MB limit. Please choose a smaller file.");
+      return;
+    }
+
+    setUploadingCert(true);
+    setError(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await apiUpload<UploadedFileResponse>("/api/v1/uploads/certificate", fd);
+      setCertificateUrl(res.url);
+      setCertificateFile(file);
+    } catch (err: any) {
+      setError(err.message || "Failed to upload certificate. Please try again.");
+    } finally {
+      setUploadingCert(false);
+    }
+  }
+
+  function removeCertificate() {
+    setCertificateFile(null);
+    setCertificateUrl(null);
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setSuccess(null);
     setLoading(true);
     try {
-      // NGO DTO requires non-null division/district/thana IDs.
-      // Guard so we never send null and trigger validation errors.
-      if (!location.divisionId || !location.districtId || !location.thanaId) {
-        setError("Please pick a division, district, and thana before submitting.");
+      // Certificate is strictly required to join Nexora
+      if (!certificateUrl) {
+        setError("Please upload your organization's official government registration certificate. It is required to join.");
         setLoading(false);
         return;
       }
+      // NGO DTO requires non-null division/district/thana IDs.
+      if (!location.divisionId || !location.districtId || !location.thanaId) {
+        setError("Please pick an operating division, district, and thana before submitting.");
+        setLoading(false);
+        return;
+      }
+
+      // Sanitize and validate mobile phone format (Bangladesh standard)
+      let cleanPhone = form.phone.trim().replace(/[\s\-\(\)]/g, "");
+      if (cleanPhone.startsWith("880") && !cleanPhone.startsWith("+880")) {
+        cleanPhone = "+" + cleanPhone;
+      }
+      const bdPhoneRegex = /^(\+880|0)1[3-9]\d{8}$/;
+      if (!bdPhoneRegex.test(cleanPhone)) {
+        setError("Please enter a valid Bangladesh mobile number (e.g. 01712345678 or +8801712345678).");
+        setLoading(false);
+        return;
+      }
+
       const payload = {
-        name: form.name,
-        email: form.email,
+        name: form.name.trim(),
+        email: form.email.trim().toLowerCase(),
         password: form.password,
-        registrationNo: form.registrationNo,
-        phone: form.phone,
-        website: form.website || null,
+        registrationNo: form.registrationNo.trim(),
+        phone: cleanPhone,
+        website: form.website?.trim() || null,
+        registrationCertificateUrl: certificateUrl,
         divisionId: location.divisionId,
         districtId: location.districtId,
         thanaId: location.thanaId,
@@ -90,6 +142,7 @@ export default function RegisterNgoPage() {
   const hasContact = form.phone.trim().length > 0;
   const hasCredentials = form.email.trim().length > 0 && form.password.length >= 8;
   const hasLocation = !!location.divisionId && !!location.districtId && !!location.thanaId;
+  const hasCertificate = !!certificateUrl;
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-100 selection:bg-red-500 selection:text-white">
@@ -208,6 +261,12 @@ export default function RegisterNgoPage() {
                   label="Operating territory"
                   icon={<MapPin className="h-3.5 w-3.5" />}
                 />
+                <Step
+                  done={hasCertificate}
+                  index="05"
+                  label="Registration certificate"
+                  icon={<ShieldCheck className="h-3.5 w-3.5" />}
+                />
               </div>
 
               <div className="mt-5 rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 text-xs text-amber-200/90 leading-relaxed">
@@ -321,6 +380,75 @@ export default function RegisterNgoPage() {
               <LocationCascade value={location} onChange={setLocation} required />
             </Fieldset>
 
+            <Fieldset index="04" title="Official verification" caption="Required credentials" icon={<ShieldCheck className="h-4 w-4" />}>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label>
+                    Government Registration Certificate <span className="text-red-400 font-bold">*</span>
+                  </Label>
+                  <span className="font-mono text-[11px] text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded">
+                    Required to join
+                  </span>
+                </div>
+                <HelpText>
+                  Upload your official government registration certificate, NGO Affairs Bureau approval, or Social Welfare incorporation document (PDF, PNG, JPG, Max 10MB).
+                </HelpText>
+
+                <div className="mt-3">
+                  {!certificateUrl ? (
+                    <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-700 hover:border-red-500/60 rounded-xl bg-slate-900/40 hover:bg-slate-900/80 cursor-pointer transition group">
+                      <div className="p-3 rounded-full bg-slate-800/80 group-hover:bg-red-500/10 text-slate-400 group-hover:text-red-400 transition mb-3">
+                        <UploadCloud className="h-6 w-6" />
+                      </div>
+                      <span className="text-sm font-medium text-slate-200 group-hover:text-white">
+                        {uploadingCert ? "Uploading certificate…" : "Click or drag certificate here to upload"}
+                      </span>
+                      <span className="text-xs text-slate-500 mt-1 font-mono">
+                        Supported formats: PDF, PNG, JPG, JPEG, WEBP (Max 10MB)
+                      </span>
+                      <input
+                        type="file"
+                        accept=".pdf,.png,.jpg,.jpeg,.webp"
+                        onChange={handleCertificateUpload}
+                        disabled={uploadingCert}
+                        className="hidden"
+                      />
+                    </label>
+                  ) : (
+                    <div className="flex items-center justify-between gap-3 p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-sm">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="p-2 rounded-lg bg-emerald-500/20 text-emerald-400 shrink-0">
+                          <FileCheck className="h-5 w-5" />
+                        </div>
+                        <div className="truncate">
+                          <p className="text-slate-100 font-medium truncate">
+                            {certificateFile?.name || "Official-Registration-Certificate"}
+                          </p>
+                          <a
+                            href={certificateUrl.startsWith("http") ? certificateUrl : `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}${certificateUrl}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-emerald-400 hover:underline font-mono inline-flex items-center gap-1 mt-0.5"
+                          >
+                            <span>View uploaded certificate</span>
+                            <span>↗</span>
+                          </a>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={removeCertificate}
+                        className="text-slate-400 hover:text-red-400 p-1.5 rounded hover:bg-slate-800 transition shrink-0"
+                        title="Remove and re-upload"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </Fieldset>
+
             {error && <ErrorState title="Could not submit" description={error} />}
             {success && (
               <div className="flex items-start gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-300">
@@ -366,14 +494,12 @@ function Step({
   done, index, label, icon,
 }: { done: boolean; index: string; label: string; icon: React.ReactNode }) {
   return (
-    <div className={`flex items-center gap-3 rounded-md border px-3 py-2 transition ${
-      done
-        ? "border-emerald-500/30 bg-emerald-500/5"
-        : "border-slate-800/80 bg-slate-950/40"
-    }`}>
-      <div className={`flex h-7 w-7 items-center justify-center rounded-md font-mono text-[11px] font-bold ${
-        done ? "bg-emerald-500/20 text-emerald-300" : "bg-slate-800/80 text-slate-500"
+    <div className={`flex items-center gap-3 rounded-md border px-3 py-2 transition ${done
+      ? "border-emerald-500/30 bg-emerald-500/5"
+      : "border-slate-800/80 bg-slate-950/40"
       }`}>
+      <div className={`flex h-7 w-7 items-center justify-center rounded-md font-mono text-[11px] font-bold ${done ? "bg-emerald-500/20 text-emerald-300" : "bg-slate-800/80 text-slate-500"
+        }`}>
         {done ? <CheckCircle2 className="h-3.5 w-3.5" /> : index}
       </div>
       <div className="flex flex-1 items-center gap-2">

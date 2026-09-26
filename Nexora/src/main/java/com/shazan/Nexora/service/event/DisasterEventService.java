@@ -77,6 +77,14 @@ public class DisasterEventService {
     }
 
     @Transactional(readOnly = true)
+    public PageResponse<DisasterEventResponse> listJoinedEventsForVolunteer(int page, int size) {
+        Volunteer volunteer = requireVolunteer();
+        var pageable = PageRequest.of(page, size, Sort.by("startAt").ascending());
+        return PageResponse
+                .from(participationRepository.findEventsByVolunteer(volunteer, pageable).map(this::toResponse));
+    }
+
+    @Transactional(readOnly = true)
     public DisasterEventResponse get(Long id) {
         return toResponse(loadEvent(id));
     }
@@ -116,6 +124,52 @@ public class DisasterEventService {
     }
 
     @Transactional
+    public DisasterEventResponse update(Long id, DisasterEventRequest req) {
+        var current = CurrentUser.require();
+        DisasterEvent event = loadEvent(id);
+
+        boolean isSuperAdmin = Role.ROLE_SUPER_ADMIN.name().equals(current.role());
+        boolean isAssignedNgo = Role.ROLE_NGO_ADMIN.name().equals(current.role())
+                && event.getNgo() != null && event.getNgo().getId().equals(current.ngoId());
+
+        if (!isSuperAdmin && !isAssignedNgo) {
+            throw ApiException.forbidden("NOT_EVENT_OWNER",
+                    "Only the assigned NGO or a super admin can edit this event");
+        }
+
+        if (!req.endAt().isAfter(req.startAt())) {
+            throw ApiException.badRequest("BAD_DATES", "The event end time must be after its start time");
+        }
+
+        event.setTitle(req.title().trim());
+        event.setType(req.type());
+        event.setSeverity(req.severity());
+        event.setDescription(req.description());
+        event.setStartAt(req.startAt());
+        event.setEndAt(req.endAt());
+        event.setRequiredVolunteers(req.requiredVolunteers());
+        event.setDivisions(new HashSet<>(divisionRepository.findAllById(req.divisionIds())));
+        event.setDistricts(new HashSet<>(req.districtIds() == null ? List.<District>of()
+                : districtRepository.findAllById(req.districtIds())));
+        event.setThanas(new HashSet<>(req.thanaIds() == null ? List.<Thana>of()
+                : thanaRepository.findAllById(req.thanaIds())));
+
+        if (event.getDivisions().isEmpty()) {
+            throw ApiException.badRequest("NO_LOCATION", "At least one division is required");
+        }
+
+        // If super admin changes the assigned NGO
+        if (isSuperAdmin && req.ngoId() != null) {
+            Ngo assignedNgo = ngoRepository.findById(req.ngoId())
+                    .orElseThrow(() -> ApiException.notFound("NGO_NOT_FOUND", "Assigned NGO not found"));
+            event.setNgo(assignedNgo);
+        }
+
+        event = eventRepository.save(event);
+        return toResponse(event);
+    }
+
+    @Transactional
     public DisasterEventResponse createForVolunteer(DisasterEventRequest req) {
         Volunteer volunteer = requireVolunteer();
         Ngo targetNgo = null;
@@ -124,7 +178,8 @@ public class DisasterEventService {
                     .orElseThrow(() -> ApiException.notFound("NGO_NOT_FOUND", "Selected NGO not found"));
         }
         DisasterEvent event = buildEvent(req, targetNgo, null, volunteer);
-        // Volunteers cannot directly publish events; they can only request them for review
+        // Volunteers cannot directly publish events; they can only request them for
+        // review
         event.setStatus(EventStatus.PENDING_REVIEW);
         event = eventRepository.save(event);
         notificationService.notifyEventCreated(event);
@@ -135,7 +190,8 @@ public class DisasterEventService {
     public PageResponse<DisasterEventResponse> listMyEventRequests(int page, int size) {
         Volunteer volunteer = requireVolunteer();
         var pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        return PageResponse.from(eventRepository.findAllByCreatedByVolunteer(volunteer, pageable).map(this::toResponse));
+        return PageResponse
+                .from(eventRepository.findAllByCreatedByVolunteer(volunteer, pageable).map(this::toResponse));
     }
 
     @Transactional
@@ -186,7 +242,8 @@ public class DisasterEventService {
 
         boolean allowed = isSuperAdmin || isAssignedNgo || isCreatorVolunteer;
         if (!allowed) {
-            throw ApiException.forbidden("NOT_EVENT_OWNER", "Only the assigned NGO or a super admin can review and update this event");
+            throw ApiException.forbidden("NOT_EVENT_OWNER",
+                    "Only the assigned NGO or a super admin can review and update this event");
         }
         event.setStatus(newStatus);
         eventRepository.save(event);
