@@ -6,6 +6,7 @@ import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 
 public record ShelterRequest(
+        Long ngoId,
         @NotBlank @Size(max = 180) String name,
         @NotBlank @Size(max = 400) String address,
         @NotNull @DecimalMin("20.0") @DecimalMax("27.0") BigDecimal latitude,
@@ -17,4 +18,10 @@ public record ShelterRequest(
         @NotNull ShelterStatus status,
         @Size(max = 1000) String notes,
         @Size(max = 80) String clientReference
-) {}
+) {
+    public ShelterRequest(String name, String address, BigDecimal latitude, BigDecimal longitude,
+                          Integer capacity, Integer currentOccupancy, String contactName,
+                          String contactPhone, ShelterStatus status, String notes, String clientReference) {
+        this(null, name, address, latitude, longitude, capacity, currentOccupancy, contactName, contactPhone, status, notes, clientReference);
+    }
+}

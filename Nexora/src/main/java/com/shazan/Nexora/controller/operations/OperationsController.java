@@ -28,14 +28,19 @@ public class OperationsController {
         return ApiResponse.ok(service.listShelters());
     }
 
+    @GetMapping("/shelters/{id}")
+    public ApiResponse<ShelterResponse> getShelter(@PathVariable Long id) {
+        return ApiResponse.ok(service.getShelter(id));
+    }
+
     @PostMapping("/shelters")
-    @PreAuthorize("hasRole('NGO_ADMIN')")
+    @PreAuthorize("hasAnyRole('NGO_ADMIN', 'SUPER_ADMIN')")
     public ApiResponse<ShelterResponse> createShelter(@Valid @RequestBody ShelterRequest request) {
         return ApiResponse.ok(service.createShelter(request));
     }
 
     @PutMapping("/shelters/{id}")
-    @PreAuthorize("hasRole('NGO_ADMIN')")
+    @PreAuthorize("hasAnyRole('NGO_ADMIN', 'SUPER_ADMIN')")
     public ApiResponse<ShelterResponse> updateShelter(@PathVariable Long id,
                                                       @Valid @RequestBody ShelterRequest request) {
         return ApiResponse.ok(service.updateShelter(id, request));
@@ -46,14 +51,19 @@ public class OperationsController {
         return ApiResponse.ok(service.listInventory());
     }
 
+    @GetMapping("/inventory/{id}")
+    public ApiResponse<InventoryItemResponse> getInventoryItem(@PathVariable Long id) {
+        return ApiResponse.ok(service.getInventoryItem(id));
+    }
+
     @PostMapping("/inventory")
-    @PreAuthorize("hasRole('NGO_ADMIN')")
+    @PreAuthorize("hasAnyRole('NGO_ADMIN', 'SUPER_ADMIN')")
     public ApiResponse<InventoryItemResponse> createInventory(@Valid @RequestBody InventoryItemRequest request) {
         return ApiResponse.ok(service.createInventoryItem(request));
     }
 
     @PutMapping("/inventory/{id}")
-    @PreAuthorize("hasRole('NGO_ADMIN')")
+    @PreAuthorize("hasAnyRole('NGO_ADMIN', 'SUPER_ADMIN')")
     public ApiResponse<InventoryItemResponse> updateInventory(@PathVariable Long id,
                                                                @Valid @RequestBody InventoryItemRequest request) {
         return ApiResponse.ok(service.updateInventoryItem(id, request));
@@ -64,16 +74,28 @@ public class OperationsController {
         return ApiResponse.ok(service.listDistributions());
     }
 
+    @GetMapping("/distributions/{id}")
+    public ApiResponse<DistributionResponse> getDistribution(@PathVariable Long id) {
+        return ApiResponse.ok(service.getDistribution(id));
+    }
+
     @PostMapping("/distributions")
-    @PreAuthorize("hasRole('NGO_ADMIN')")
+    @PreAuthorize("hasAnyRole('NGO_ADMIN', 'SUPER_ADMIN')")
     public ApiResponse<DistributionResponse> createDistribution(@Valid @RequestBody DistributionRequest request) {
         return ApiResponse.ok(service.createDistribution(request));
     }
 
+    @PutMapping("/distributions/{id}")
+    @PreAuthorize("hasAnyRole('NGO_ADMIN', 'SUPER_ADMIN')")
+    public ApiResponse<DistributionResponse> updateDistribution(@PathVariable Long id,
+                                                                @Valid @RequestBody DistributionRequest request) {
+        return ApiResponse.ok(service.updateDistribution(id, request));
+    }
+
     @PatchMapping("/distributions/{id}/status")
-    @PreAuthorize("hasRole('NGO_ADMIN')")
+    @PreAuthorize("hasAnyRole('NGO_ADMIN', 'SUPER_ADMIN')")
     public ApiResponse<DistributionResponse> updateDistributionStatus(@PathVariable Long id,
-                                                                       @RequestParam DistributionStatus status) {
+                                                                       @RequestParam("status") DistributionStatus status) {
         return ApiResponse.ok(service.updateDistributionStatus(id, status));
     }
 }

@@ -8,12 +8,16 @@ import com.shazan.Nexora.domain.operations.DistributionRecord;
 import com.shazan.Nexora.domain.operations.InventoryItem;
 import com.shazan.Nexora.domain.operations.Shelter;
 import com.shazan.Nexora.dto.operations.*;
+import com.shazan.Nexora.repository.ngo.NgoRepository;
 import com.shazan.Nexora.repository.operations.DistributionRecordRepository;
 import com.shazan.Nexora.repository.operations.InventoryItemRepository;
 import com.shazan.Nexora.repository.operations.ShelterRepository;
+import com.shazan.Nexora.security.AuthenticatedUser;
 import com.shazan.Nexora.security.CurrentUser;
 import com.shazan.Nexora.service.ngo.NgoService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,18 +32,28 @@ public class OperationsService {
     private final InventoryItemRepository inventoryRepository;
     private final DistributionRecordRepository distributionRepository;
     private final NgoService ngoService;
+    private final NgoRepository ngoRepository;
 
     @Transactional(readOnly = true)
     public List<ShelterResponse> listShelters() {
         return visibleShelters().stream().map(this::toShelterResponse).toList();
     }
 
+    @Transactional(readOnly = true)
+    public ShelterResponse getShelter(Long id) {
+        return toShelterResponse(loadShelter(id));
+    }
+
     @Transactional
     public ShelterResponse createShelter(ShelterRequest request) {
-        Ngo ngo = ngoService.currentNgo();
+        Ngo ngo = resolveNgo(request.ngoId());
         if (request.clientReference() != null && !request.clientReference().isBlank()) {
             var existing = shelterRepository.findByClientReference(request.clientReference());
-            if (existing.isPresent()) return toShelterResponse(requireOwner(existing.get(), ngo));
+            if (existing.isPresent()) {
+                Shelter s = existing.get();
+                requireCanManage(s);
+                return toShelterResponse(s);
+            }
         }
         validateShelterCapacity(request.capacity(), request.currentOccupancy());
         Shelter shelter = Shelter.builder()
@@ -61,8 +75,8 @@ public class OperationsService {
 
     @Transactional
     public ShelterResponse updateShelter(Long id, ShelterRequest request) {
-        Ngo ngo = ngoService.currentNgo();
-        Shelter shelter = requireOwner(loadShelter(id), ngo);
+        Shelter shelter = loadShelter(id);
+        requireCanManage(shelter);
         validateShelterCapacity(request.capacity(), request.currentOccupancy());
         shelter.setName(request.name().trim());
         shelter.setAddress(request.address().trim());
@@ -82,14 +96,26 @@ public class OperationsService {
         return visibleInventory().stream().map(this::toInventoryResponse).toList();
     }
 
+    @Transactional(readOnly = true)
+    public InventoryItemResponse getInventoryItem(Long id) {
+        return toInventoryResponse(loadInventory(id));
+    }
+
     @Transactional
     public InventoryItemResponse createInventoryItem(InventoryItemRequest request) {
-        Ngo ngo = ngoService.currentNgo();
+        Ngo ngo = resolveNgo(request.ngoId());
         if (request.clientReference() != null && !request.clientReference().isBlank()) {
             var existing = inventoryRepository.findByClientReference(request.clientReference());
-            if (existing.isPresent()) return toInventoryResponse(requireOwner(existing.get(), ngo));
+            if (existing.isPresent()) {
+                InventoryItem item = existing.get();
+                requireCanManage(item);
+                return toInventoryResponse(item);
+            }
         }
-        Shelter shelter = request.shelterId() == null ? null : requireOwner(loadShelter(request.shelterId()), ngo);
+        Shelter shelter = request.shelterId() == null ? null : loadShelter(request.shelterId());
+        if (shelter != null && !canManageShelter(shelter)) {
+            throw ApiException.forbidden("NOT_OPERATION_OWNER", "Cannot associate inventory with a shelter not managed by your organization");
+        }
         InventoryItem item = InventoryItem.builder()
                 .ngo(ngo)
                 .shelter(shelter)
@@ -107,9 +133,12 @@ public class OperationsService {
 
     @Transactional
     public InventoryItemResponse updateInventoryItem(Long id, InventoryItemRequest request) {
-        Ngo ngo = ngoService.currentNgo();
-        InventoryItem item = requireOwner(loadInventory(id), ngo);
-        Shelter shelter = request.shelterId() == null ? null : requireOwner(loadShelter(request.shelterId()), ngo);
+        InventoryItem item = loadInventory(id);
+        requireCanManage(item);
+        Shelter shelter = request.shelterId() == null ? null : loadShelter(request.shelterId());
+        if (shelter != null && !canManageShelter(shelter)) {
+            throw ApiException.forbidden("NOT_OPERATION_OWNER", "Cannot associate inventory with a shelter not managed by your organization");
+        }
         item.setShelter(shelter);
         item.setName(request.name().trim());
         item.setCategory(request.category());
@@ -126,16 +155,31 @@ public class OperationsService {
         return visibleDistributions().stream().map(this::toDistributionResponse).toList();
     }
 
+    @Transactional(readOnly = true)
+    public DistributionResponse getDistribution(Long id) {
+        return toDistributionResponse(loadDistribution(id));
+    }
+
     @Transactional
     public DistributionResponse createDistribution(DistributionRequest request) {
-        Ngo ngo = ngoService.currentNgo();
+        Ngo ngo = resolveNgo(request.ngoId());
         if (request.clientReference() != null && !request.clientReference().isBlank()) {
             var existing = distributionRepository.findByClientReference(request.clientReference());
-            if (existing.isPresent()) return toDistributionResponse(requireOwner(existing.get(), ngo));
+            if (existing.isPresent()) {
+                DistributionRecord record = existing.get();
+                requireCanManage(record);
+                return toDistributionResponse(record);
+            }
         }
-        InventoryItem item = requireOwner(loadInventory(request.inventoryItemId()), ngo);
-        Shelter shelter = request.shelterId() == null ? null : requireOwner(loadShelter(request.shelterId()), ngo);
-        if (request.status() == DistributionStatus.COMPLETED) deductInventory(item, request.quantity());
+        InventoryItem item = loadInventory(request.inventoryItemId());
+        requireCanManage(item);
+        Shelter shelter = request.shelterId() == null ? null : loadShelter(request.shelterId());
+        if (shelter != null && !canManageShelter(shelter)) {
+            throw ApiException.forbidden("NOT_OPERATION_OWNER", "Cannot associate distribution with a shelter not managed by your organization");
+        }
+        if (request.status() == DistributionStatus.COMPLETED) {
+            deductInventory(item, request.quantity());
+        }
         DistributionRecord record = DistributionRecord.builder()
                 .ngo(ngo)
                 .shelter(shelter)
@@ -155,9 +199,53 @@ public class OperationsService {
     }
 
     @Transactional
+    public DistributionResponse updateDistribution(Long id, DistributionRequest request) {
+        DistributionRecord record = loadDistribution(id);
+        requireCanManage(record);
+        InventoryItem newItem = loadInventory(request.inventoryItemId());
+        requireCanManage(newItem);
+        Shelter newShelter = request.shelterId() == null ? null : loadShelter(request.shelterId());
+        if (newShelter != null && !canManageShelter(newShelter)) {
+            throw ApiException.forbidden("NOT_OPERATION_OWNER", "Cannot associate distribution with a shelter not managed by your organization");
+        }
+
+        InventoryItem oldItem = record.getInventoryItem();
+        DistributionStatus oldStatus = record.getStatus();
+        BigDecimal oldQuantity = record.getQuantity();
+
+        // Revert previous inventory deduction if was COMPLETED
+        if (oldStatus == DistributionStatus.COMPLETED) {
+            oldItem.setQuantity(oldItem.getQuantity().add(oldQuantity));
+            inventoryRepository.save(oldItem);
+        }
+
+        // Apply new inventory deduction if new status is COMPLETED
+        if (request.status() == DistributionStatus.COMPLETED) {
+            InventoryItem targetItem = oldItem.getId().equals(newItem.getId()) ? oldItem : newItem;
+            deductInventory(targetItem, request.quantity());
+            inventoryRepository.save(targetItem);
+            record.setInventoryItem(targetItem);
+        } else {
+            record.setInventoryItem(newItem);
+        }
+
+        record.setShelter(newShelter);
+        record.setRecipientGroup(request.recipientGroup().trim());
+        record.setQuantity(request.quantity());
+        record.setDistributedAt(request.distributedAt());
+        record.setLocationDescription(request.locationDescription().trim());
+        record.setLatitude(request.latitude());
+        record.setLongitude(request.longitude());
+        record.setStatus(request.status());
+        record.setNotes(request.notes());
+
+        return toDistributionResponse(distributionRepository.save(record));
+    }
+
+    @Transactional
     public DistributionResponse updateDistributionStatus(Long id, DistributionStatus status) {
-        Ngo ngo = ngoService.currentNgo();
-        DistributionRecord record = requireOwner(loadDistribution(id), ngo);
+        DistributionRecord record = loadDistribution(id);
+        requireCanManage(record);
         DistributionStatus previous = record.getStatus();
         if (previous != DistributionStatus.COMPLETED && status == DistributionStatus.COMPLETED) {
             deductInventory(record.getInventoryItem(), record.getQuantity());
@@ -202,8 +290,86 @@ public class OperationsService {
                 : distributionRepository.findAllByActiveTrueOrderByDistributedAtDesc();
     }
 
+    private AuthenticatedUser getCurrentUserOrNull() {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.isAuthenticated() && auth.getPrincipal() instanceof AuthenticatedUser u) {
+                return u;
+            }
+        } catch (Exception ignored) {}
+        return null;
+    }
+
+    private boolean isAdmin() {
+        AuthenticatedUser user = getCurrentUserOrNull();
+        return user != null && Role.ROLE_SUPER_ADMIN.name().equals(user.role());
+    }
+
     private boolean isNgo() {
-        return Role.ROLE_NGO_ADMIN.name().equals(CurrentUser.require().role());
+        AuthenticatedUser user = getCurrentUserOrNull();
+        return user != null && Role.ROLE_NGO_ADMIN.name().equals(user.role());
+    }
+
+    private Long currentUserNgoId() {
+        AuthenticatedUser user = getCurrentUserOrNull();
+        if (user != null && user.ngoId() != null) {
+            return user.ngoId();
+        }
+        try {
+            Ngo n = ngoService.currentNgo();
+            if (n != null) return n.getId();
+        } catch (Exception ignored) {}
+        return null;
+    }
+
+    public boolean canManageShelter(Shelter shelter) {
+        if (isAdmin()) return true;
+        Long ngoId = currentUserNgoId();
+        return ngoId != null && shelter.getNgo() != null && shelter.getNgo().getId().equals(ngoId);
+    }
+
+    public boolean canManageInventory(InventoryItem item) {
+        if (isAdmin()) return true;
+        Long ngoId = currentUserNgoId();
+        if (ngoId == null) return false;
+        if (item.getNgo() != null && item.getNgo().getId().equals(ngoId)) return true;
+        return item.getShelter() != null && item.getShelter().getNgo() != null
+                && item.getShelter().getNgo().getId().equals(ngoId);
+    }
+
+    public boolean canManageDistribution(DistributionRecord record) {
+        if (isAdmin()) return true;
+        Long ngoId = currentUserNgoId();
+        if (ngoId == null) return false;
+        if (record.getNgo() != null && record.getNgo().getId().equals(ngoId)) return true;
+        return record.getShelter() != null && record.getShelter().getNgo() != null
+                && record.getShelter().getNgo().getId().equals(ngoId);
+    }
+
+    private void requireCanManage(Shelter shelter) {
+        if (!canManageShelter(shelter)) throw notOwner();
+    }
+
+    private void requireCanManage(InventoryItem item) {
+        if (!canManageInventory(item)) throw notOwner();
+    }
+
+    private void requireCanManage(DistributionRecord record) {
+        if (!canManageDistribution(record)) throw notOwner();
+    }
+
+    private Ngo resolveNgo(Long requestedNgoId) {
+        if (isAdmin()) {
+            if (requestedNgoId != null) {
+                return ngoRepository.findById(requestedNgoId)
+                        .orElseThrow(() -> ApiException.badRequest("NGO_NOT_FOUND", "Specified NGO does not exist"));
+            }
+            if (ngoRepository != null) {
+                return ngoRepository.findAll().stream().findFirst()
+                        .orElseThrow(() -> ApiException.badRequest("NO_NGO_AVAILABLE", "No NGO exists to associate this operation with"));
+            }
+        }
+        return ngoService.currentNgo();
     }
 
     private void deductInventory(InventoryItem item, BigDecimal quantity) {
@@ -234,23 +400,8 @@ public class OperationsService {
                 .orElseThrow(() -> ApiException.notFound("DISTRIBUTION_NOT_FOUND", "Distribution record not found"));
     }
 
-    private Shelter requireOwner(Shelter shelter, Ngo ngo) {
-        if (!shelter.getNgo().getId().equals(ngo.getId())) throw notOwner();
-        return shelter;
-    }
-
-    private InventoryItem requireOwner(InventoryItem item, Ngo ngo) {
-        if (!item.getNgo().getId().equals(ngo.getId())) throw notOwner();
-        return item;
-    }
-
-    private DistributionRecord requireOwner(DistributionRecord record, Ngo ngo) {
-        if (!record.getNgo().getId().equals(ngo.getId())) throw notOwner();
-        return record;
-    }
-
     private ApiException notOwner() {
-        return ApiException.forbidden("NOT_OPERATION_OWNER", "This operational record belongs to another NGO");
+        return ApiException.forbidden("NOT_OPERATION_OWNER", "You are not authorized to manage this operational record");
     }
 
     private String blankToNull(String value) {

@@ -7,6 +7,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public record InventoryItemRequest(
+        Long ngoId,
         Long shelterId,
         @NotBlank @Size(max = 160) String name,
         @NotNull InventoryCategory category,
@@ -16,4 +17,10 @@ public record InventoryItemRequest(
         LocalDate expiryDate,
         @Size(max = 1000) String notes,
         @Size(max = 80) String clientReference
-) {}
+) {
+    public InventoryItemRequest(Long shelterId, String name, InventoryCategory category,
+                                BigDecimal quantity, String unit, BigDecimal reorderLevel,
+                                LocalDate expiryDate, String notes, String clientReference) {
+        this(null, shelterId, name, category, quantity, unit, reorderLevel, expiryDate, notes, clientReference);
+    }
+}

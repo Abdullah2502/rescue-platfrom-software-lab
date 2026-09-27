@@ -35,6 +35,7 @@ class OperationsServiceTest {
     @Mock InventoryItemRepository inventoryRepository;
     @Mock DistributionRecordRepository distributionRepository;
     @Mock NgoService ngoService;
+    @Mock com.shazan.Nexora.repository.ngo.NgoRepository ngoRepository;
     @InjectMocks OperationsService service;
 
     private Ngo ngo;
