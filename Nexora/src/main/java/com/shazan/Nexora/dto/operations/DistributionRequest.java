@@ -7,6 +7,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 public record DistributionRequest(
+        Long ngoId,
         Long shelterId,
         @NotNull Long inventoryItemId,
         @NotBlank @Size(max = 180) String recipientGroup,
@@ -18,4 +19,11 @@ public record DistributionRequest(
         @NotNull DistributionStatus status,
         @Size(max = 1000) String notes,
         @Size(max = 80) String clientReference
-) {}
+) {
+    public DistributionRequest(Long shelterId, Long inventoryItemId, String recipientGroup,
+                               BigDecimal quantity, Instant distributedAt, String locationDescription,
+                               BigDecimal latitude, BigDecimal longitude, DistributionStatus status,
+                               String notes, String clientReference) {
+        this(null, shelterId, inventoryItemId, recipientGroup, quantity, distributedAt, locationDescription, latitude, longitude, status, notes, clientReference);
+    }
+}
